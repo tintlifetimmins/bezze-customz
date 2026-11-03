@@ -1,4 +1,5 @@
 const cache = new Map();
+const feed = [];
 
 export const DESIGNS = [
   { id: '01-horror', file: '01_horror_Bones_Pattern_9_.webp', name: 'Bones Pattern', category: 'Horror', tags: ['sugar skull', 'day of the dead', 'pattern', 'floral', 'mexican', 'colorful', 'art', 'background'], fit: 'cover', w: 1800, h: 1800, popular: 80, newest: 20, drop: '014', ink: '#ffffff' },
@@ -23,6 +24,26 @@ export const DESIGNS = [
   { id: '20-gothic', file: '20_gothic_12.webp', name: 'Gothic', category: 'Gothic', tags: ['wednesday addams', 'gothic', 'school uniform', 'umbrella', 'portrait', 'woman', 'dark', 'tv show'], fit: 'cover', w: 4000, h: 3478, popular: 61, newest: 1, ink: '#ffffff' },
 ];
 
+export function installDropDesigns(list) {
+  feed.splice(0, feed.length);
+  for (const design of list || []) {
+    if (!design?.id || DESIGNS.some((item) => item.id === design.id)) continue;
+    feed.push(design);
+    slot(design.id);
+  }
+}
+
+export function customerDesigns() {
+  const instant = feed.filter((design) => design.release === 'instant').sort((a, b) => b.newest - a.newest);
+  const current = feed.filter((design) => design.drop === 'current').sort((a, b) => b.newest - a.newest);
+  const older = feed.filter((design) => design.release === 'next_drop' && design.drop !== 'current').sort((a, b) => b.newest - a.newest);
+  return [...instant, ...current, ...older, ...DESIGNS];
+}
+
+export function currentDropDesigns() {
+  return feed.filter((design) => design.drop === 'current').sort((a, b) => b.newest - a.newest);
+}
+
 export const CATEGORIES = ['All', ...DESIGNS.map((design) => design.category)];
 
 export const HERO_DESIGN = '02-floral';
@@ -44,7 +65,7 @@ function slot(id) {
     finish();
   };
   img.onerror = finish;
-  img.src = 'previews/' + design.file;
+  img.src = design.src || ('previews/' + design.file);
   return entry;
 }
 
@@ -61,7 +82,7 @@ export function designReady(id) {
 DESIGNS.forEach((design) => slot(design.id));
 
 export function getDesign(id) {
-  return DESIGNS.find((design) => design.id === id) || null;
+  return feed.find((design) => design.id === id) || DESIGNS.find((design) => design.id === id) || null;
 }
 
 function paintCustom(ctx, w, h) {
@@ -97,16 +118,19 @@ export function drawDesign(id, ctx, w, h) {
 
 export function filterDesigns({ q = '', cat = 'All', sort = 'popular' } = {}) {
   const query = q.trim().toLowerCase();
-  const list = DESIGNS.filter((design) => {
+  const list = customerDesigns().filter((design) => {
     if (cat && cat !== 'All' && design.category !== cat) return false;
     if (!query) return true;
     const hay = `${design.name} ${design.category} ${design.tags.join(' ')}`.toLowerCase();
     return hay.includes(query);
   });
-  if (sort === 'newest') list.sort((a, b) => b.newest - a.newest);
-  else if (sort === 'az') list.sort((a, b) => a.name.localeCompare(b.name));
-  else list.sort((a, b) => b.popular - a.popular);
-  return list;
+  const feedItems = list.filter((design) => design.feed);
+  const samples = list.filter((design) => !design.feed);
+  if (sort === 'newest') samples.sort((a, b) => b.newest - a.newest);
+  else if (sort === 'az') samples.sort((a, b) => a.name.localeCompare(b.name));
+  else samples.sort((a, b) => b.popular - a.popular);
+  feedItems.sort((a, b) => b.newest - a.newest);
+  return [...feedItems, ...samples];
 }
 
 export function drawWrap(key, w, h) {

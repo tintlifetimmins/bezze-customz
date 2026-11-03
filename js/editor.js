@@ -2,6 +2,8 @@ import { CLIPS, CLIP_CATEGORIES } from './clipart.js';
 import { GRAPHICS } from './graphics.js';
 import { designReady, drawWrap, getDesign, whenDesignReady } from './designs.js';
 import { filterCatalog, loadCatalog } from './catalog.js';
+import { installDropDesigns } from './designs.js';
+import { loadDropFeed } from './drops.js';
 import { paintProductShot } from './thumbs.js';
 import { PRICE, clearDraft, loadDraft, money, saveDraft, setBag } from './store.js';
 import { initNav } from './nav.js';
@@ -1634,7 +1636,7 @@ function designThumb(id) {
   return drawWrap(id, 168, 144, { bare: false }).toDataURL('image/jpeg', 0.82);
 }
 
-const catalog = loadCatalog();
+let catalog = loadCatalog();
 const designFilter = { q: '', cat: 'All' };
 
 function designCard(item) {
@@ -1718,6 +1720,28 @@ function bootDesigns() {
     renderDesignLists();
   });
   renderDesignLists();
+  loadDropFeed().then((rows) => {
+    if (!rows.length) return;
+    installDropDesigns(rows);
+    catalog = loadCatalog();
+    const known = new Set([...cats.querySelectorAll('button')].map((button) => button.dataset.cat));
+    for (const name of catalog.categories) {
+      if (known.has(name)) continue;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.textContent = name;
+      button.dataset.cat = name;
+      button.addEventListener('click', () => {
+        designFilter.cat = name;
+        cats.querySelectorAll('button').forEach((item) => {
+          item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+        });
+        renderDesignLists();
+      });
+      cats.append(button);
+    }
+    renderDesignLists();
+  }).catch(() => {});
 }
 
 const RECENT_KEY = 'bezze-recent-colours';

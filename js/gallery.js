@@ -1,4 +1,5 @@
-import { CATEGORIES, filterDesigns } from './designs.js';
+import { CATEGORIES, filterDesigns, installDropDesigns } from './designs.js';
+import { loadDropFeed } from './drops.js';
 import { mountCards } from './cards.js';
 import { initNav } from './nav.js';
 
@@ -84,4 +85,23 @@ function render() {
 }
 
 render();
+loadDropFeed().then((rows) => {
+  if (!rows.length) return;
+  installDropDesigns(rows);
+  const known = new Set([...cats.querySelectorAll('button')].map((button) => button.dataset.cat));
+  for (const design of rows) {
+    if (known.has(design.category)) continue;
+    known.add(design.category);
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = design.category;
+    button.dataset.cat = design.category;
+    button.addEventListener('click', () => {
+      state.cat = design.category;
+      render();
+    });
+    cats.append(button);
+  }
+  render();
+}).catch(() => {});
 document.fonts.ready.then(render);

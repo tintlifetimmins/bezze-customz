@@ -1,18 +1,21 @@
-import { CATEGORIES, DESIGNS } from './designs.js';
+import { customerDesigns } from './designs.js';
 
 export const THIS_DROP = '014';
 
 function dropId(design) {
+  if (design.drop) return design.drop;
   if (design.badge === 'Drop 014') return THIS_DROP;
-  return design.drop || null;
+  return null;
 }
 
-// Sample catalog in the same shape a future data/manifest.json will use.
 export function loadCatalog() {
+  const designs = customerDesigns();
+  const categories = ['All', ...new Set(designs.map((design) => design.category))];
+  const hasCurrent = designs.some((design) => design.drop === 'current');
   return {
-    thisDrop: THIS_DROP,
-    categories: CATEGORIES,
-    designs: DESIGNS.map((design) => ({
+    thisDrop: hasCurrent ? 'current' : THIS_DROP,
+    categories,
+    designs: designs.map((design) => ({
       id: design.id,
       name: design.name,
       category: design.category,

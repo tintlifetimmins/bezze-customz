@@ -1,12 +1,13 @@
-import { DESIGNS, drawWrap, whenDesignReady } from './designs.js';
+import { DESIGNS, drawWrap, whenDesignReady, installDropDesigns, currentDropDesigns } from './designs.js';
 import { mountCards } from './cards.js';
 import { paintProductShot } from './thumbs.js';
-import { nextTuesdayEight, remaining } from './time.js';
+import { remaining } from './time.js';
+import { nextDropAt, loadDropFeed } from './drops.js';
 import { initNav } from './nav.js';
 
 initNav();
 
-const target = nextTuesdayEight();
+const target = nextDropAt(new Date());
 
 function tick() {
   const left = remaining(target);
@@ -26,11 +27,20 @@ function tick() {
 tick();
 setInterval(tick, 1000);
 
-const drops = DESIGNS.filter((design) => design.drop === '014');
+const sampleDrops = DESIGNS.filter((design) => design.drop === '014');
 const grid = document.getElementById('drop-grid');
-const paintDrops = () => mountCards(drops, grid);
+const paintDrops = (list = sampleDrops) => mountCards(list, grid);
 paintDrops();
-document.fonts.ready.then(paintDrops);
+loadDropFeed().then((rows) => {
+  installDropDesigns(rows);
+  const weekly = currentDropDesigns();
+  if (weekly.length) {
+    const title = document.querySelector('.drop h2');
+    if (title) title.textContent = 'This week';
+    paintDrops(weekly);
+  }
+}).catch(() => {});
+document.fonts.ready.then(() => paintDrops(currentDropDesigns().length ? currentDropDesigns() : sampleDrops));
 
 const ORDER = DESIGNS.map((design) => design.id);
 const TURN_MS = 13500;
