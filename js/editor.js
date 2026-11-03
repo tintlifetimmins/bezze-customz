@@ -15,17 +15,25 @@ const CH = 217 * PX;
 const SAFE = 15 * PX;
 
 const FONTS = [
-  { name: 'Great Vibes', css: '"Great Vibes", cursive', sample: 'Kayla' },
-  { name: 'Instrument Serif', css: '"Instrument Serif", Georgia, serif', sample: 'Kayla' },
-  { name: 'Cormorant Garamond', css: '"Cormorant Garamond", Georgia, serif', sample: 'Kayla' },
-  { name: 'Playfair Display', css: '"Playfair Display", Georgia, serif', sample: 'Kayla' },
-  { name: 'Libre Baskerville', css: '"Libre Baskerville", Georgia, serif', sample: 'Kayla' },
-  { name: 'Cinzel', css: 'Cinzel, Georgia, serif', sample: 'KAYLA' },
-  { name: 'Bebas Neue', css: '"Bebas Neue", Impact, sans-serif', sample: 'KAYLA' },
-  { name: 'Outfit', css: 'Outfit, Arial, sans-serif', sample: 'Kayla' },
+  { name: 'Great Vibes', css: '"Great Vibes", cursive', group: 'Script' },
+  { name: 'Pacifico', css: 'Pacifico, cursive', group: 'Script' },
+  { name: 'Lobster', css: 'Lobster, cursive', group: 'Script' },
+  { name: 'Fredoka', css: 'Fredoka, sans-serif', group: 'Fun' },
+  { name: 'Permanent Marker', css: '"Permanent Marker", cursive', group: 'Fun' },
+  { name: 'Luckiest Guy', css: '"Luckiest Guy", cursive', group: 'Fun' },
+  { name: 'Playfair Display', css: '"Playfair Display", Georgia, serif', group: 'Classic' },
+  { name: 'Cinzel', css: 'Cinzel, Georgia, serif', group: 'Classic' },
+  { name: 'Cormorant Garamond', css: '"Cormorant Garamond", Georgia, serif', group: 'Classic' },
+  { name: 'Libre Baskerville', css: '"Libre Baskerville", Georgia, serif', group: 'Classic' },
+  { name: 'Instrument Serif', css: '"Instrument Serif", Georgia, serif', group: 'Classic' },
+  { name: 'Montserrat', css: 'Montserrat, Arial, sans-serif', group: 'Classic' },
+  { name: 'Outfit', css: 'Outfit, Arial, sans-serif', group: 'Classic' },
+  { name: 'Bebas Neue', css: '"Bebas Neue", Impact, sans-serif', group: 'Bold' },
+  { name: 'Bungee', css: 'Bungee, Impact, sans-serif', group: 'Bold' },
+  { name: 'Oswald', css: 'Oswald, Impact, sans-serif', group: 'Bold' },
 ];
 
-const INKS = ['#ffffff', '#1a1a1a', '#ff2d8f', '#e7c98a', '#fff4e6', '#1c2748', '#f0c9d4', '#d7ecf8'];
+const INKS = ['#ffffff', '#1a1a1a', '#ff2d8f', '#e7c98a', '#fff4e6', '#1c2748', '#d21f3c', '#1f8a4c', '#24597a', '#f08a24', '#7a4ea3', '#c5c8ce'];
 
 const WRAPS = [
   ['#7a0048', '#ff4fa3', 'Fuchsia'],
@@ -321,14 +329,23 @@ function updatePrice() {
   return value;
 }
 
+function textNode(obj) {
+  if (!obj) return null;
+  if (obj.type === 'name-text' || obj.type === 'i-text') return obj;
+  if (obj.data?.kind === 'text' && typeof obj.getObjects === 'function') {
+    return obj.getObjects().find((item) => item.data?.role === 'letters' || item.type === 'name-text') || null;
+  }
+  return null;
+}
+
 function isText(obj) {
-  return !!obj && (obj.type === 'name-text' || obj.type === 'i-text' || obj.data?.kind === 'text');
+  return !!textNode(obj);
 }
 
 function layerName(obj) {
   if (obj.data?.kind === 'design') return obj.data.name || 'Design';
   if (obj.data?.kind === 'monogram') return `Monogram ${obj.data.initials || ''}`.trim();
-  if (isText(obj)) return obj.text || 'Name';
+  if (isText(obj)) return textNode(obj)?.text || 'Name';
   if (obj.data?.kind === 'clip') return obj.data.name || 'Shape';
   if (obj.data?.kind === 'graphic') return obj.data.name || 'Graphic';
   if (obj.data?.kind === 'photo') return 'Photo';
@@ -484,41 +501,47 @@ function checkSafe(obj) {
 }
 
 function containText(obj) {
-  if (!isText(obj)) return;
-  obj.objectCaching = false;
+  const node = textNode(obj);
+  if (!node) return;
+  node.objectCaching = false;
   let guard = 0;
   while (guard < 60) {
-    obj.initDimensions();
-    obj.setCoords();
-    const box = obj.getBoundingRect(true, true);
-    const lines = obj.textLines ? obj.textLines.length : 1;
-    const inside = box.left >= -0.5 && box.top >= -0.5 && box.left + box.width <= CW + 0.5 && box.top + box.height <= CH + 0.5;
+    node.initDimensions();
+    node.setCoords();
+    const box = node.group ? null : node.getBoundingRect(true, true);
+    const lines = node.textLines ? node.textLines.length : 1;
+    const width = node.getScaledWidth();
+    const inside = box
+      ? box.left >= -0.5 && box.top >= -0.5 && box.left + box.width <= CW + 0.5 && box.top + box.height <= CH + 0.5
+      : width <= CW - 8;
     if (inside && lines <= 1) break;
-    if ((obj.fontSize || 200) > 48) obj.set('fontSize', Math.max(48, (obj.fontSize || 200) - 8));
-    else {
-      const next = Math.max(0.2, (obj.scaleX || 1) * 0.92);
-      obj.set({ scaleX: next, scaleY: next });
+    if ((node.fontSize || 200) > 48) node.set('fontSize', Math.max(48, (node.fontSize || 200) - 8));
+    else if (!node.group) {
+      const next = Math.max(0.2, (node.scaleX || 1) * 0.92);
+      node.set({ scaleX: next, scaleY: next });
       if (next <= 0.2) break;
-    }
+    } else break;
     guard += 1;
   }
-  obj.setCoords();
-  const box = obj.getBoundingRect(true, true);
-  let dx = 0;
-  let dy = 0;
-  if (box.left < 0) dx = -box.left;
-  if (box.top < 0) dy = -box.top;
-  if (box.left + box.width > CW) dx = CW - (box.left + box.width);
-  if (box.top + box.height > CH) dy = CH - (box.top + box.height);
-  if (dx || dy) obj.set({ left: (obj.left || 0) + dx, top: (obj.top || 0) + dy });
-  obj.initDimensions();
-  obj.setCoords();
-  obj.dirty = true;
+  if (!node.group) {
+    node.setCoords();
+    const box = node.getBoundingRect(true, true);
+    let dx = 0;
+    let dy = 0;
+    if (box.left < 0) dx = -box.left;
+    if (box.top < 0) dy = -box.top;
+    if (box.left + box.width > CW) dx = CW - (box.left + box.width);
+    if (box.top + box.height > CH) dy = CH - (box.top + box.height);
+    if (dx || dy) node.set({ left: (node.left || 0) + dx, top: (node.top || 0) + dy });
+  }
+  node.initDimensions();
+  node.setCoords();
+  node.dirty = true;
   const size = document.getElementById('size');
   const label = document.getElementById('size-label');
   if (size && label && document.activeElement !== size) {
-    size.value = String(Math.round(obj.fontSize));
-    label.textContent = `${Math.round(obj.fontSize / PX)} mm`;
+    size.value = String(Math.round(node.fontSize));
+    label.textContent = `${Math.round(node.fontSize / PX)} mm`;
   }
 }
 
@@ -560,31 +583,35 @@ function makeName(meta) {
     angle: meta.angle || 0,
     editable: !phoneEditing(),
     objectCaching: false,
-    data: { kind: 'text', ...(meta.data || {}) },
+    data: { kind: 'text', role: 'letters', plaque: 'none', ...(meta.data || {}) },
   });
   applyTextPaint(text, meta);
   return text;
 }
 
 function applyTextPaint(obj, meta = {}) {
-  const outline = meta.outline ?? obj.data?.outline;
-  const shadow = meta.shadowOn ?? obj.data?.shadowOn;
-  if (obj.data) {
-    obj.data.outline = !!outline;
-    obj.data.shadowOn = !!shadow;
+  const letters = textNode(obj) || obj;
+  const outline = meta.outline ?? letters.data?.outline;
+  const shadowOn = meta.shadowOn ?? letters.data?.shadowOn;
+  const stroke = meta.stroke || letters.data?.outlineColor || '#1a1a1a';
+  const strokeWidth = meta.strokeWidth ?? letters.data?.outlineWidth ?? Math.max(6, Math.round((letters.fontSize || 200) / 16));
+  const shadowColor = meta.shadowColor || letters.data?.shadowColor || '#1a1a1a';
+  if (letters.data) {
+    letters.data.outline = !!outline;
+    letters.data.shadowOn = !!shadowOn;
+    letters.data.outlineColor = stroke;
+    letters.data.outlineWidth = strokeWidth;
+    letters.data.shadowColor = shadowColor;
   }
-  obj.set('paintFirst', 'stroke');
-  if (outline) {
-    obj.set({ stroke: meta.stroke || contrast(obj.fill), strokeWidth: Math.max(2, obj.fontSize / 18) });
-  } else {
-    obj.set({ stroke: null, strokeWidth: 0 });
-  }
-  obj.set('shadow', shadow
-    ? new fabric.Shadow({ color: 'rgba(0,0,0,.45)', blur: 18, offsetX: 0, offsetY: 10 })
+  letters.set('paintFirst', 'stroke');
+  if (outline) letters.set({ stroke, strokeWidth });
+  else letters.set({ stroke: null, strokeWidth: 0 });
+  letters.set('shadow', shadowOn
+    ? new fabric.Shadow({ color: shadowColor, blur: 16, offsetX: 0, offsetY: 8 })
     : null);
-  obj.dirty = true;
-  if (obj.initDimensions) obj.initDimensions();
-  obj.setCoords();
+  letters.dirty = true;
+  if (letters.initDimensions) letters.initDimensions();
+  letters.setCoords();
 }
 
 function cleanInitials(value) {
@@ -790,15 +817,20 @@ function blurDock() {
 
 function syncFieldToObject(obj) {
   if (!obj) return;
-  if (isText(obj)) {
+  const node = textNode(obj);
+  if (node) {
     const value = document.getElementById('edit-text').value;
-    if (obj.text !== value) {
-      obj.set('text', value);
-      obj.initDimensions();
-      containText(obj);
-      touchObject(obj);
+    if (node.text !== value) {
+      node.set('text', value);
+      node.initDimensions();
+      containText(node);
+      touchObject(node);
+      const shape = obj.data?.plaque || node.data?.plaque;
+      if (shape && shape !== 'none') applyPlaque(obj, shape);
     }
-  } else if (obj.data?.kind === 'monogram') {
+    return;
+  }
+  if (obj.data?.kind === 'monogram') {
     const letters = cleanInitials(document.getElementById('mono-letters').value) || 'A';
     if ((obj.data.initials || 'A') !== letters) updateMonogram({ initials: letters });
   }
@@ -968,6 +1000,7 @@ function showSelection(obj) {
   document.getElementById('sheet-mono').hidden = kind !== 'monogram';
   document.getElementById('sheet-clip').hidden = kind !== 'clip';
   document.getElementById('sheet-graphic').hidden = kind !== 'graphic';
+  syncSheetChrome(kind);
   const dock = document.getElementById('type-dock');
   dock.hidden = kind !== 'text' && kind !== 'monogram';
   document.getElementById('edit-text').hidden = kind !== 'text';
@@ -977,15 +1010,31 @@ function showSelection(obj) {
   document.getElementById('lock').textContent = obj.data?.locked ? 'Unlock' : 'Lock';
   if (kind === 'text' && document.activeElement !== document.getElementById('edit-text')) fillTextSheet(obj);
   if (kind === 'monogram' && document.activeElement !== document.getElementById('mono-letters')) fillMonoSheet(obj);
-  if (kind === 'clip') document.getElementById('clip-ink').value = toHex(obj.data?.fill || '#ffffff');
+  if (kind === 'clip' || kind === 'graphic') setPicker(toHex(obj.data?.fill || obj.data?.tint || '#ffffff'), false);
   if (kind === 'graphic') {
     const removable = obj.data.hasAlpha === false;
     document.getElementById('white-toggle').hidden = !removable;
     document.getElementById('remove-white').checked = !!obj.data.removeWhite;
+    document.getElementById('tint-on').setAttribute('aria-pressed', obj.data.tint ? 'true' : 'false');
+    document.getElementById('tint-off').setAttribute('aria-pressed', obj.data.tint ? 'false' : 'true');
   }
+  const faded = textNode(obj) || obj;
+  const pct = Math.round(((faded && faded.opacity != null ? faded.opacity : 1) * 100));
+  document.getElementById('opacity').value = String(pct);
+  document.getElementById('opacity-label').textContent = `${pct}%`;
   refreshLayers();
   checkSafe(obj);
   updateHandleBar();
+}
+
+function syncSheetChrome(kind) {
+  const tab = document.querySelector('#text-tabs [aria-pressed="true"]')?.dataset.texttab || 'fonts';
+  document.querySelectorAll('[data-textpane]').forEach((pane) => {
+    pane.hidden = kind !== 'text' || pane.dataset.textpane !== tab;
+  });
+  const showColour = kind === 'clip' || kind === 'graphic' || (kind === 'text' && tab === 'colour');
+  document.getElementById('colour-tools').hidden = !showColour;
+  document.getElementById('look-opacity').hidden = !['text', 'clip', 'graphic', 'photo'].includes(kind);
 }
 
 function closeSheet() {
@@ -999,7 +1048,8 @@ function closeSheet() {
   updateHandleBar();
 }
 
-function fillTextSheet(obj) {
+function fillTextSheet(host) {
+  const obj = textNode(host) || host;
   filling = true;
   document.getElementById('edit-text').value = obj.text || '';
   document.getElementById('size').value = String(Math.round(obj.fontSize || 200));
@@ -1019,6 +1069,19 @@ function fillTextSheet(obj) {
   document.querySelectorAll('#align-row button').forEach((button) => {
     button.setAttribute('aria-pressed', button.dataset.align === (obj.data?.align || 'center') ? 'true' : 'false');
   });
+  document.querySelectorAll('#plaque-shapes button').forEach((button) => {
+    button.setAttribute('aria-pressed', button.dataset.plaque === (obj.data?.plaque || 'none') ? 'true' : 'false');
+  });
+  document.getElementById('plaque-ink').value = toHex(obj.data?.plaqueFill || '#1a1a1a');
+  document.getElementById('plaque-edge').checked = !!obj.data?.plaqueEdge;
+  const badgeOpacity = Math.round((obj.data?.plaqueOpacity ?? 1) * 100);
+  document.getElementById('plaque-opacity').value = String(badgeOpacity);
+  document.getElementById('plaque-opacity-label').textContent = `${badgeOpacity}%`;
+  document.getElementById('outline-ink').value = toHex(obj.data?.outlineColor || '#1a1a1a');
+  document.getElementById('outline-width').value = String(obj.data?.outlineWidth || 8);
+  document.getElementById('outline-width-label').textContent = document.getElementById('outline-width').value;
+  document.getElementById('shadow-ink').value = toHex(obj.data?.shadowColor || '#1a1a1a');
+  setPicker(toHex(obj.fill || '#ffffff'), false);
   filling = false;
   refreshFontPreviews();
 }
@@ -1082,6 +1145,7 @@ function fontButtons(container, onPick) {
     button.type = 'button';
     button.className = 'font-chip';
     button.dataset.font = font.name;
+    button.dataset.group = font.group || 'Classic';
     button.style.fontFamily = font.css;
     button.textContent = font.name;
     button.title = font.name;
@@ -1134,16 +1198,104 @@ async function addText() {
 }
 
 function liveText(mutate, doCommit, options = {}) {
-  const obj = active();
-  if (!isText(obj) || filling) return;
-  mutate(obj);
-  if (options.contain) containText(obj);
-  touchObject(obj);
-  obj.dirty = true;
-  obj.setCoords();
+  let host = active();
+  const node = textNode(host);
+  if (!node || filling) return;
+  mutate(node);
+  if (options.contain) containText(node);
+  if (options.layout && (host.data?.plaque || node.data?.plaque) && (host.data?.plaque || node.data?.plaque) !== 'none') {
+    host = applyPlaque(host, host.data?.plaque || node.data?.plaque);
+  }
+  touchObject(node);
+  node.dirty = true;
+  node.setCoords();
+  if (host !== node) host.dirty = true;
   canvas.requestRenderAll();
-  scheduleSyncAndSafe(obj);
+  scheduleSyncAndSafe(host);
   if (doCommit) commit();
+}
+
+function plaquePath(shape, width, height) {
+  const w = width;
+  const h = height;
+  if (shape === 'banner') {
+    const notch = Math.min(28, w * 0.12);
+    return `M ${-w / 2 + notch} ${-h / 2} H ${w / 2 - notch} L ${w / 2} 0 L ${w / 2 - notch} ${h / 2} H ${-w / 2 + notch} L ${-w / 2} 0 Z`;
+  }
+  const tip = Math.min(36, w * 0.16);
+  return `M ${-w / 2 + 24} ${-h / 2} H ${w / 2 - tip} L ${w / 2} 0 L ${w / 2 - tip} ${h / 2} H ${-w / 2 + 24} Q ${-w / 2} ${h / 2} ${-w / 2} ${h / 2 - 24} V ${-h / 2 + 24} Q ${-w / 2} ${-h / 2} ${-w / 2 + 24} ${-h / 2} Z`;
+}
+
+function makePlaque(shape, letters) {
+  const data = letters.data || {};
+  const width = Math.max(letters.width + 90, letters.fontSize * 1.4);
+  const height = Math.max(letters.height + 70, letters.fontSize * 1.15);
+  const fill = shape === 'frame' ? 'rgba(0,0,0,0)' : (data.plaqueFill || '#1a1a1a');
+  const stroke = data.plaqueEdge ? (data.plaqueStroke || '#ffffff') : null;
+  const strokeWidth = data.plaqueEdge ? (data.plaqueStrokeWidth || 8) : 0;
+  const opacity = data.plaqueOpacity ?? 1;
+  const common = {
+    fill,
+    stroke,
+    strokeWidth,
+    opacity,
+    originX: 'center',
+    originY: 'center',
+    left: 0,
+    top: 0,
+    objectCaching: false,
+    data: { role: 'plaque' },
+  };
+  if (shape === 'circle') return new fabric.Circle({ ...common, radius: Math.max(width, height) / 2 });
+  if (shape === 'oval') return new fabric.Ellipse({ ...common, rx: width / 2, ry: height / 2 });
+  if (shape === 'banner' || shape === 'label') return new fabric.Path(plaquePath(shape, width, height), common);
+  return new fabric.Rect({ ...common, width, height, rx: 28, ry: 28 });
+}
+
+let arranging = false;
+function applyPlaque(host, shape) {
+  if (arranging) return host;
+  const letters = textNode(host);
+  if (!letters) return host;
+  arranging = true;
+  const parent = letters.group || host;
+  const left = parent.left;
+  const top = parent.top;
+  const angle = parent.angle || 0;
+  const scaleX = parent.scaleX || 1;
+  const scaleY = parent.scaleY || 1;
+  const data = Object.assign({}, letters.data, { kind: 'text', role: 'letters', plaque: shape || 'none' });
+  if (parent !== letters && parent.type === 'group') {
+    parent._restoreObjectsState();
+    canvas.remove(parent);
+    parent.getObjects().forEach((item) => { item.group = undefined; });
+  } else canvas.remove(letters);
+  letters.group = undefined;
+  letters.set({ data, left: 0, top: 0, angle: 0, scaleX: 1, scaleY: 1, originX: 'center', originY: 'center' });
+  letters.initDimensions();
+  let next = letters;
+  if (shape && shape !== 'none') {
+    const plate = makePlaque(shape, letters);
+    next = new fabric.Group([plate, letters], {
+      originX: 'center',
+      originY: 'center',
+      left,
+      top,
+      angle,
+      scaleX,
+      scaleY,
+      objectCaching: false,
+      subTargetCheck: false,
+      data,
+    });
+  } else {
+    letters.set({ left, top, angle, scaleX, scaleY });
+  }
+  canvas.add(next);
+  canvas.setActiveObject(next);
+  next.setCoords();
+  arranging = false;
+  return next;
 }
 
 function updateMonogram(patch, doCommit) {
@@ -1555,6 +1707,122 @@ function bootDesigns() {
   renderDesignLists();
 }
 
+const RECENT_KEY = 'bezze-recent-colours';
+let pickerLock = false;
+
+function hslToHex(h, s, l) {
+  const sat = s / 100;
+  const light = l / 100;
+  const a = sat * Math.min(light, 1 - light);
+  const f = (n) => {
+    const k = (n + h / 30) % 12;
+    return light - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)));
+  };
+  const byte = (n) => Math.round(255 * f(n)).toString(16).padStart(2, '0');
+  return `#${byte(0)}${byte(8)}${byte(4)}`;
+}
+
+function hexToHsl(hex) {
+  const raw = toHex(hex).slice(1);
+  const r = parseInt(raw.slice(0, 2), 16) / 255;
+  const g = parseInt(raw.slice(2, 4), 16) / 255;
+  const b = parseInt(raw.slice(4, 6), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  const light = (max + min) / 2;
+  const delta = max - min;
+  let h = 0;
+  let s = 0;
+  if (delta) {
+    s = delta / (1 - Math.abs(2 * light - 1));
+    if (max === r) h = ((g - b) / delta) % 6;
+    else if (max === g) h = (b - r) / delta + 2;
+    else h = (r - g) / delta + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(light * 100) };
+}
+
+function recentColours() {
+  try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]'); } catch { return []; }
+}
+
+function paintRecent() {
+  const box = document.getElementById('recent-swatches');
+  box.replaceChildren();
+  recentColours().forEach((color) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'swatch';
+    button.style.background = color;
+    button.setAttribute('aria-label', color);
+    button.addEventListener('click', () => setPicker(color, true));
+    box.append(button);
+  });
+}
+
+function rememberColour(hex) {
+  const color = toHex(hex);
+  const list = recentColours().filter((item) => item !== color);
+  list.unshift(color);
+  localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, 8)));
+  paintRecent();
+}
+
+function setPicker(hex, apply) {
+  const color = toHex(hex);
+  const hsl = hexToHsl(color);
+  pickerLock = true;
+  document.getElementById('ink').value = color;
+  document.getElementById('hex-ink').value = color;
+  document.getElementById('hue').value = String(hsl.h);
+  document.getElementById('sat').value = String(hsl.s);
+  document.getElementById('light').value = String(hsl.l);
+  document.getElementById('hue-label').textContent = String(hsl.h);
+  document.getElementById('sat-label').textContent = `${hsl.s}%`;
+  document.getElementById('light-label').textContent = `${hsl.l}%`;
+  pickerLock = false;
+  if (apply) applyPickedColour(color);
+}
+
+function tintGraphic(obj, color) {
+  const kept = (obj.filters || []).filter((filter) => filter.type !== 'BlendColor');
+  if (color) kept.push(new fabric.Image.filters.BlendColor({ color, mode: 'tint', alpha: 0.9 }));
+  obj.filters = kept;
+  obj.applyFilters();
+  if (!obj.data) obj.data = { kind: 'graphic' };
+  obj.data.tint = color || null;
+  obj.data.fill = color || obj.data.fill;
+  obj.dirty = true;
+}
+
+function applyPickedColour(color) {
+  const obj = active();
+  if (!obj) return;
+  const kind = obj.data?.kind;
+  if (isText(obj)) {
+    liveText((node) => {
+      node.set('fill', color);
+      if (node.data?.outline && !node.data.outlineColor) node.set('stroke', color);
+    }, false);
+    return;
+  }
+  if (kind === 'clip') {
+    paintClip(obj, color);
+    canvas.requestRenderAll();
+    scheduleSync();
+    return;
+  }
+  if (kind === 'graphic') {
+    tintGraphic(obj, color);
+    document.getElementById('tint-on').setAttribute('aria-pressed', 'true');
+    document.getElementById('tint-off').setAttribute('aria-pressed', 'false');
+    canvas.requestRenderAll();
+    scheduleSync();
+  }
+}
+
 function bootUi() {
   fontButtons(document.getElementById('sheet-fonts'), async (font) => {
     state.font = font.name;
@@ -1562,7 +1830,7 @@ function bootUi() {
     liveText((obj) => {
       obj.set('fontFamily', font.name);
       obj.initDimensions();
-    }, true, { contain: true });
+    }, true, { contain: true, layout: true });
     highlightFonts(font.name);
   });
   fontButtons(document.getElementById('mono-fonts'), async (font) => {
@@ -1570,25 +1838,51 @@ function bootUi() {
     updateMonogram({ fontFamily: font.name }, true);
     highlightFonts(font.name, '#mono-fonts');
   });
-  paintSwatches(document.getElementById('ink-swatches'), (color) => {
-    document.getElementById('ink').value = color;
-    liveText((obj) => {
-      obj.set('fill', color);
-      if (obj.data?.outline) obj.set('stroke', contrast(color));
-    }, true);
+  paintSwatches(document.getElementById('ink-swatches'), (color) => setPicker(color, true));
+  paintSwatches(document.getElementById('outline-swatches'), (color) => {
+    document.getElementById('outline-ink').value = color;
+    liveText((obj) => applyTextPaint(obj, { stroke: color, outline: true }), true, { layout: true });
+    document.querySelector('#text-toggles [data-toggle="outline"]').setAttribute('aria-pressed', 'true');
+  });
+  paintSwatches(document.getElementById('shadow-swatches'), (color) => {
+    document.getElementById('shadow-ink').value = color;
+    liveText((obj) => applyTextPaint(obj, { shadowColor: color, shadowOn: true }), true);
+    document.querySelector('#text-toggles [data-toggle="shadow"]').setAttribute('aria-pressed', 'true');
+  });
+  paintSwatches(document.getElementById('plaque-swatches'), (color) => {
+    document.getElementById('plaque-ink').value = color;
+    const host = active();
+    const node = textNode(host);
+    if (!node) return;
+    node.data.plaqueFill = color;
+    const shape = host.data?.plaque && host.data.plaque !== 'none' ? host.data.plaque : 'round';
+    applyPlaque(host, shape);
+    canvas.requestRenderAll();
+    commit();
+  });
+  paintRecent();
+  document.getElementById('font-groups').addEventListener('click', (event) => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    document.querySelectorAll('#font-groups button').forEach((item) => {
+      item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+    });
+    const group = button.dataset.group;
+    document.querySelectorAll('#sheet-fonts .font-chip').forEach((chip) => {
+      chip.hidden = group !== 'All' && chip.dataset.group !== group;
+    });
+  });
+  document.getElementById('text-tabs').addEventListener('click', (event) => {
+    const button = event.target.closest('button');
+    if (!button) return;
+    document.querySelectorAll('#text-tabs button').forEach((item) => {
+      item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+    });
+    syncSheetChrome('text');
   });
   paintSwatches(document.getElementById('mono-swatches'), (color) => {
     document.getElementById('mono-ink').value = color;
     updateMonogram({ fill: color }, true);
-  });
-  paintSwatches(document.getElementById('clip-swatches'), (color) => {
-    document.getElementById('clip-ink').value = color;
-    const obj = active();
-    if (obj?.data?.kind === 'clip') {
-      paintClip(obj, color);
-      canvas.requestRenderAll();
-      commit();
-    }
   });
 
   document.getElementById('clip-count').textContent = `${CLIPS.length + GRAPHICS.length}`;
@@ -1699,7 +1993,7 @@ document.getElementById('edit-text').addEventListener('input', () => {
   liveText((obj) => {
     obj.set('text', document.getElementById('edit-text').value);
     obj.initDimensions();
-  }, false, { contain: true });
+  }, false, { contain: true, layout: true });
   refreshFontPreviews();
   if (typing) requestAnimationFrame(revealActive);
 });
@@ -1765,9 +2059,9 @@ document.getElementById('size').addEventListener('input', () => {
   document.getElementById('size-label').textContent = `${Math.round(size / PX)} mm`;
   liveText((obj) => {
     obj.set('fontSize', size);
-    if (obj.data?.outline) obj.set('strokeWidth', Math.max(2, size / 18));
+    if (obj.data?.outline) obj.set('strokeWidth', obj.data.outlineWidth || Math.max(6, size / 16));
     obj.initDimensions();
-  });
+  }, false, { contain: true, layout: true });
 });
 document.getElementById('size').addEventListener('change', () => { if (isText(active())) commit(); });
 document.getElementById('tracking').addEventListener('input', () => {
@@ -1776,7 +2070,7 @@ document.getElementById('tracking').addEventListener('input', () => {
   liveText((obj) => {
     obj.set('charSpacing', spacing);
     obj.initDimensions();
-  });
+  }, false, { contain: true, layout: true });
 });
 document.getElementById('tracking').addEventListener('change', () => { if (isText(active())) commit(); });
 document.getElementById('curve-on').addEventListener('change', (event) => {
@@ -1785,15 +2079,125 @@ document.getElementById('curve-on').addEventListener('change', (event) => {
   if (on && Number(slider.value) === 0) slider.value = '55';
   if (!on) slider.value = '0';
   document.getElementById('curve-label').textContent = slider.value;
-  liveText((obj) => { obj.curve = Number(slider.value); obj.initDimensions(); }, true);
+  liveText((obj) => { obj.curve = Number(slider.value); obj.initDimensions(); }, true, { contain: true, layout: true });
 });
 document.getElementById('curve').addEventListener('input', () => {
   const value = document.getElementById('curve').value;
   document.getElementById('curve-label').textContent = value;
   document.getElementById('curve-on').checked = Number(value) !== 0;
-  liveText((obj) => { obj.curve = Number(value); obj.initDimensions(); });
+  liveText((obj) => { obj.curve = Number(value); obj.initDimensions(); }, false, { layout: true });
 });
 document.getElementById('curve').addEventListener('change', () => { if (isText(active())) commit(); });
+function pickerHex() {
+  return hslToHex(Number(document.getElementById('hue').value), Number(document.getElementById('sat').value), Number(document.getElementById('light').value));
+}
+['hue', 'sat', 'light'].forEach((id) => {
+  document.getElementById(id).addEventListener('input', () => {
+    if (pickerLock) return;
+    document.getElementById(`${id}-label`).textContent = id === 'hue' ? document.getElementById(id).value : `${document.getElementById(id).value}%`;
+    setPicker(pickerHex(), true);
+  });
+  document.getElementById(id).addEventListener('change', () => rememberColour(document.getElementById('ink').value));
+});
+document.getElementById('hex-ink').addEventListener('change', () => {
+  const raw = document.getElementById('hex-ink').value.trim();
+  const hex = raw.startsWith('#') ? raw : `#${raw}`;
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) return;
+  setPicker(hex, true);
+  rememberColour(hex);
+  if (isText(active()) || active()?.data?.kind === 'clip' || active()?.data?.kind === 'graphic') commit();
+});
+document.getElementById('opacity').addEventListener('input', () => {
+  const pct = Number(document.getElementById('opacity').value);
+  document.getElementById('opacity-label').textContent = `${pct}%`;
+  const host = active();
+  const node = textNode(host) || host;
+  if (!node) return;
+  node.set('opacity', pct / 100);
+  node.dirty = true;
+  canvas.requestRenderAll();
+  scheduleSync();
+});
+document.getElementById('opacity').addEventListener('change', () => commit());
+document.getElementById('outline-ink').addEventListener('input', (event) => {
+  liveText((obj) => applyTextPaint(obj, { stroke: event.target.value, outline: true }), false, { layout: true });
+});
+document.getElementById('outline-ink').addEventListener('change', () => { if (isText(active())) commit(); });
+document.getElementById('outline-width').addEventListener('input', () => {
+  const width = Number(document.getElementById('outline-width').value);
+  document.getElementById('outline-width-label').textContent = String(width);
+  liveText((obj) => applyTextPaint(obj, { strokeWidth: width, outline: width > 0 }), false, { layout: true });
+});
+document.getElementById('outline-width').addEventListener('change', () => { if (isText(active())) commit(); });
+document.getElementById('shadow-ink').addEventListener('input', (event) => {
+  liveText((obj) => applyTextPaint(obj, { shadowColor: event.target.value, shadowOn: true }), false);
+});
+document.getElementById('shadow-ink').addEventListener('change', () => { if (isText(active())) commit(); });
+document.getElementById('plaque-shapes').addEventListener('click', (event) => {
+  const button = event.target.closest('button');
+  if (!button) return;
+  document.querySelectorAll('#plaque-shapes button').forEach((item) => {
+    item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+  });
+  const host = active();
+  if (!isText(host)) return;
+  applyPlaque(host, button.dataset.plaque);
+  canvas.requestRenderAll();
+  scheduleSync();
+  commit();
+});
+document.getElementById('plaque-ink').addEventListener('input', (event) => {
+  const host = active();
+  const node = textNode(host);
+  if (!node) return;
+  node.data.plaqueFill = event.target.value;
+  const shape = host.data?.plaque && host.data.plaque !== 'none' ? host.data.plaque : 'round';
+  applyPlaque(host, shape);
+  canvas.requestRenderAll();
+});
+document.getElementById('plaque-ink').addEventListener('change', () => { if (isText(active())) commit(); });
+document.getElementById('plaque-edge').addEventListener('change', (event) => {
+  const host = active();
+  const node = textNode(host);
+  if (!node) return;
+  node.data.plaqueEdge = event.target.checked;
+  node.data.plaqueStroke = node.data.plaqueStroke || '#ffffff';
+  const shape = host.data?.plaque && host.data.plaque !== 'none' ? host.data.plaque : 'frame';
+  applyPlaque(host, shape);
+  canvas.requestRenderAll();
+  commit();
+});
+document.getElementById('plaque-opacity').addEventListener('input', () => {
+  const pct = Number(document.getElementById('plaque-opacity').value);
+  document.getElementById('plaque-opacity-label').textContent = `${pct}%`;
+  const host = active();
+  const node = textNode(host);
+  if (!node) return;
+  node.data.plaqueOpacity = pct / 100;
+  if (host.data?.plaque && host.data.plaque !== 'none') {
+    applyPlaque(host, host.data.plaque);
+    canvas.requestRenderAll();
+  }
+});
+document.getElementById('plaque-opacity').addEventListener('change', () => { if (isText(active())) commit(); });
+document.getElementById('tint-on').addEventListener('click', () => {
+  const obj = active();
+  if (obj?.data?.kind !== 'graphic') return;
+  tintGraphic(obj, document.getElementById('ink').value || '#ff2d8f');
+  document.getElementById('tint-on').setAttribute('aria-pressed', 'true');
+  document.getElementById('tint-off').setAttribute('aria-pressed', 'false');
+  canvas.requestRenderAll();
+  commit();
+});
+document.getElementById('tint-off').addEventListener('click', () => {
+  const obj = active();
+  if (obj?.data?.kind !== 'graphic') return;
+  tintGraphic(obj, null);
+  document.getElementById('tint-on').setAttribute('aria-pressed', 'false');
+  document.getElementById('tint-off').setAttribute('aria-pressed', 'true');
+  canvas.requestRenderAll();
+  commit();
+});
 document.getElementById('ink').addEventListener('input', (event) => {
   liveText((obj) => {
     obj.set('fill', event.target.value);
@@ -1855,14 +2259,6 @@ document.getElementById('mono-size').addEventListener('input', () => {
   scheduleSyncAndSafe(obj);
 });
 document.getElementById('mono-size').addEventListener('change', () => { if (active()?.data?.kind === 'monogram') commit(); });
-document.getElementById('clip-ink').addEventListener('input', (event) => {
-  const obj = active();
-  if (obj?.data?.kind !== 'clip') return;
-  paintClip(obj, event.target.value);
-  canvas.requestRenderAll();
-  scheduleSync();
-});
-document.getElementById('clip-ink').addEventListener('change', () => { if (active()?.data?.kind === 'clip') commit(); });
 document.getElementById('remove-white').addEventListener('change', (event) => {
   const obj = active();
   if (obj?.data?.kind !== 'graphic' || obj.data.hasAlpha !== false) return;
@@ -2235,7 +2631,11 @@ window.__bezze = {
       typing: document.body.classList.contains('typing'),
       sheetOpen: document.getElementById('sheet').dataset.open === 'true',
       tool: document.querySelector('.panel[data-open="true"]')?.id || '',
-      text: obj?.text || '',
+      text: (textNode(obj) || obj)?.text || '',
+      lines: (textNode(obj) || obj)?.textLines ? (textNode(obj) || obj).textLines.length : 0,
+      opacity: Math.round((((textNode(obj) || obj)?.opacity ?? 1) * 100)),
+      plaque: obj?.data?.plaque || 'none',
+      outline: !!(textNode(obj) || obj)?.data?.outline,
       kind: obj?.data?.kind || '',
       selected: !!obj,
       left: obj ? obj.left : null,
@@ -2246,7 +2646,6 @@ window.__bezze = {
       safeWidth: CW - SAFE * 2,
       canvasWidth: CW,
       canvasHeight: CH,
-      lines: obj && obj.textLines ? obj.textLines.length : 0,
       canvasBox: obj ? (() => {
         const boundBox = obj.getBoundingRect(true, true);
         return {

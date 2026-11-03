@@ -8,7 +8,7 @@
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@600&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Geist:wght@400;500;600;700&family=Great+Vibes&family=Instrument+Serif:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;1,400&family=Outfit:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Bungee&family=Cinzel:wght@600&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Fredoka:wght@500;600&family=Great+Vibes&family=Instrument+Serif:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;1,400&family=Lobster&family=Luckiest+Guy&family=Montserrat:wght@500;700&family=Oswald:wght@500;600&family=Outfit:wght@400;500;600&family=Pacifico&family=Permanent+Marker&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
   <script type="importmap">
   {
@@ -167,32 +167,105 @@
       <button type="button" id="type-done">Done</button>
     </div>
     <div id="sheet-text">
-      <div class="font-row" id="sheet-fonts"></div>
-      <div class="colour-row">
-        <div class="swatches" id="ink-swatches"></div>
-        <input id="ink" type="color" value="#ffffff" aria-label="Text colour">
+      <div class="mini-tabs" id="text-tabs" role="tablist" aria-label="Text options">
+        <button type="button" data-texttab="fonts" aria-pressed="true">Fonts</button>
+        <button type="button" data-texttab="colour">Colour</button>
+        <button type="button" data-texttab="style">Style</button>
+        <button type="button" data-texttab="badge">Badge</button>
       </div>
-      <label class="field">Size <span id="size-label">33 mm</span>
-        <input id="size" type="range" min="48" max="520" step="2" value="200">
-      </label>
-      <label class="field">Letter spacing <span id="track-label">0</span>
-        <input id="tracking" type="range" min="-40" max="600" step="10" value="0">
-      </label>
-      <label class="check"><input id="curve-on" type="checkbox"> <span>Curved text</span></label>
-      <label class="field">Curve <span id="curve-label">0</span>
-        <input id="curve" type="range" min="-100" max="100" step="1" value="0">
-      </label>
-      <div class="style-row" id="text-toggles">
-        <button type="button" data-toggle="bold">Bold</button>
-        <button type="button" data-toggle="italic">Italic</button>
-        <button type="button" data-toggle="outline">Outline</button>
-        <button type="button" data-toggle="shadow">Shadow</button>
+      <div data-textpane="fonts">
+        <div class="style-row" id="font-groups" role="group" aria-label="Font groups">
+          <button type="button" data-group="All" aria-pressed="true">All</button>
+          <button type="button" data-group="Script">Script</button>
+          <button type="button" data-group="Fun">Fun</button>
+          <button type="button" data-group="Classic">Classic</button>
+          <button type="button" data-group="Bold">Bold</button>
+        </div>
+        <div class="font-row" id="sheet-fonts"></div>
       </div>
-      <div class="style-row" id="align-row">
-        <button type="button" data-align="left">Left</button>
-        <button type="button" data-align="center" aria-pressed="true">Centre</button>
-        <button type="button" data-align="right">Right</button>
+      <div data-textpane="colour" hidden>
+        <p class="hint">Pick a colour. It stays on one line.</p>
       </div>
+      <div data-textpane="style" hidden>
+        <div class="style-row" id="text-toggles">
+          <button type="button" data-toggle="bold">Bold</button>
+          <button type="button" data-toggle="italic">Italic</button>
+          <button type="button" data-toggle="outline">Outline</button>
+          <button type="button" data-toggle="shadow">Shadow</button>
+        </div>
+        <div class="colour-row">
+          <p class="hint">Outline colour</p>
+          <div class="swatches" id="outline-swatches"></div>
+          <input id="outline-ink" type="color" value="#1a1a1a" aria-label="Outline colour">
+        </div>
+        <label class="field">Outline thickness <span id="outline-width-label">8</span>
+          <input id="outline-width" type="range" min="0" max="40" step="1" value="8">
+        </label>
+        <div class="colour-row">
+          <p class="hint">Shadow colour</p>
+          <div class="swatches" id="shadow-swatches"></div>
+          <input id="shadow-ink" type="color" value="#1a1a1a" aria-label="Shadow colour">
+        </div>
+        <label class="field">Letter spacing <span id="track-label">0</span>
+          <input id="tracking" type="range" min="-40" max="600" step="10" value="0">
+        </label>
+        <label class="check"><input id="curve-on" type="checkbox"> <span>Curved text</span></label>
+        <label class="field">Curve <span id="curve-label">0</span>
+          <input id="curve" type="range" min="-100" max="100" step="1" value="0">
+        </label>
+        <div class="style-row" id="align-row">
+          <button type="button" data-align="left">Left</button>
+          <button type="button" data-align="center" aria-pressed="true">Centre</button>
+          <button type="button" data-align="right">Right</button>
+        </div>
+        <label class="field">Size <span id="size-label">33 mm</span>
+          <input id="size" type="range" min="48" max="520" step="2" value="200">
+        </label>
+      </div>
+      <div data-textpane="badge" hidden>
+        <p class="hint">A shape behind the name. It moves with the words.</p>
+        <div class="style-row" id="plaque-shapes">
+          <button type="button" data-plaque="none" aria-pressed="true">None</button>
+          <button type="button" data-plaque="frame">Frame</button>
+          <button type="button" data-plaque="round">Round</button>
+          <button type="button" data-plaque="banner">Banner</button>
+          <button type="button" data-plaque="circle">Circle</button>
+          <button type="button" data-plaque="oval">Oval</button>
+          <button type="button" data-plaque="label">Label</button>
+        </div>
+        <div class="colour-row">
+          <p class="hint">Badge colour</p>
+          <div class="swatches" id="plaque-swatches"></div>
+          <input id="plaque-ink" type="color" value="#1a1a1a" aria-label="Badge colour">
+        </div>
+        <label class="check"><input id="plaque-edge" type="checkbox"> <span>Badge edge</span></label>
+        <label class="field">Badge see-through <span id="plaque-opacity-label">100%</span>
+          <input id="plaque-opacity" type="range" min="0" max="100" step="1" value="100">
+        </label>
+      </div>
+    </div>
+    <div id="colour-tools">
+      <div class="swatches" id="ink-swatches"></div>
+      <p class="hint">Recent</p>
+      <div class="swatches" id="recent-swatches"></div>
+      <label class="field">Hue <span id="hue-label">330</span>
+        <input id="hue" type="range" min="0" max="360" step="1" value="330">
+      </label>
+      <label class="field">Strong <span id="sat-label">100%</span>
+        <input id="sat" type="range" min="0" max="100" step="1" value="100">
+      </label>
+      <label class="field">Light <span id="light-label">50%</span>
+        <input id="light" type="range" min="0" max="100" step="1" value="50">
+      </label>
+      <label class="field">Hex
+        <input id="hex-ink" type="text" maxlength="7" value="#ff2d8f" spellcheck="false" autocapitalize="off" aria-label="Hex colour">
+      </label>
+      <input id="ink" type="text" value="#ffffff" hidden>
+    </div>
+    <div id="look-opacity">
+      <label class="field">See-through <span id="opacity-label">100%</span>
+        <input id="opacity" type="range" min="0" max="100" step="1" value="100">
+      </label>
     </div>
     <div id="sheet-mono" hidden>
       <div class="style-row" id="mono-styles">
@@ -211,14 +284,15 @@
       </label>
     </div>
     <div id="sheet-clip" hidden>
-      <p class="hint">Colour</p>
-      <div class="colour-row">
-        <div class="swatches" id="clip-swatches"></div>
-        <input id="clip-ink" type="color" value="#ffffff" aria-label="Shape colour">
-      </div>
+      <p class="hint">One colour for the shape.</p>
     </div>
     <div id="sheet-graphic" hidden>
       <p class="legal-note">Test image, not for sale.</p>
+      <div class="style-row" id="tint-row">
+        <button type="button" id="tint-on">Tint</button>
+        <button type="button" id="tint-off" aria-pressed="true">Original</button>
+      </div>
+      <p class="hint">Tint adds one colour. Original keeps the picture.</p>
       <label class="check" id="white-toggle">
         <input id="remove-white" type="checkbox">
         <span>Remove white background</span>

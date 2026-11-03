@@ -197,9 +197,45 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
     expect(fitted.canvasBox.top).toBeGreaterThanOrEqual(-1);
     expect(fitted.canvasBox.right).toBeLessThanOrEqual(fitted.canvasWidth + 1);
     expect(fitted.canvasBox.bottom).toBeLessThanOrEqual(fitted.canvasHeight + 1);
+    await press(page.locator('#text-tabs button[data-texttab="colour"]'), testInfo);
     const swatch = page.locator('#ink-swatches button').nth(2);
     await press(swatch, testInfo);
     await expect(page.locator('#ink')).not.toHaveValue('#ffffff');
+    await press(page.locator('#text-tabs button[data-texttab="style"]'), testInfo);
+    await press(page.locator('#text-toggles [data-toggle="outline"]'), testInfo);
+    await page.locator('#outline-width').evaluate((el) => {
+      el.value = '14';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await page.locator('#opacity').evaluate((el) => {
+      el.value = '70';
+      el.dispatchEvent(new Event('input', { bubbles: true }));
+      el.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    await press(page.locator('#text-tabs button[data-texttab="badge"]'), testInfo);
+    await press(page.locator('#plaque-shapes button[data-plaque="round"]'), testInfo);
+    await expect.poll(async () => (await read(page)).plaque).toBe('round');
+    await expect.poll(async () => (await read(page)).outline).toBe(true);
+    await expect.poll(async () => (await read(page)).opacity).toBe(70);
+    await expect.poll(async () => (await read(page)).text).toBe('Brittney Lee');
+    await expect.poll(async () => (await read(page)).lines).toBe(1);
+    const fonts = page.locator('#sheet-fonts .font-chip');
+    const fontCount = await fonts.count();
+    expect(fontCount).toBeGreaterThanOrEqual(16);
+    for (let index = 0; index < fontCount; index += 1) {
+      const chip = fonts.nth(index);
+      if (!(await chip.isVisible())) continue;
+      await chip.scrollIntoViewIfNeeded();
+      await press(chip, testInfo);
+      await expect.poll(async () => (await read(page)).text).toBe('Brittney Lee');
+      await expect.poll(async () => (await read(page)).lines).toBe(1);
+      const state = await read(page);
+      expect(state.canvasBox.left).toBeGreaterThanOrEqual(-1);
+      expect(state.canvasBox.top).toBeGreaterThanOrEqual(-1);
+      expect(state.canvasBox.right).toBeLessThanOrEqual(state.canvasWidth + 1);
+      expect(state.canvasBox.bottom).toBeLessThanOrEqual(state.canvasHeight + 1);
+    }
     if (testInfo.project.name === 'phone' || testInfo.project.name === 'desktop') {
       mkdirSync('test-results', { recursive: true });
       const shot = await page.screenshot();
