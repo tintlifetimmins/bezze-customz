@@ -785,3 +785,128 @@ body.sheet-open .toast { bottom: 58vh; }
 @media (min-width: 1100px) {
   .grid { grid-template-columns: repeat(4, 1fr); }
 }
+
+body.editor-app {
+  height: 100dvh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+body.editor-app .sticky-top { position: relative; flex: none; }
+body.editor-app .editor-layout {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+body.editor-app .view-toggle {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 12px 4px;
+  flex: none;
+}
+body.editor-app .view-toggle button {
+  min-height: 44px;
+  min-width: 88px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #141416;
+  color: white;
+  font-weight: 650;
+}
+body.editor-app .view-toggle button[aria-pressed="true"] { background: white; color: #111; }
+body.editor-app .view-toggle b { margin-left: auto; font-size: 16px; }
+body.editor-app .stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  touch-action: none;
+}
+body.editor-app .art-zoom {
+  position: absolute;
+  inset: 6px 8px 28px;
+  display: grid;
+  place-items: center;
+  touch-action: none;
+}
+body.editor-app .art-frame {
+  width: min(100%, calc((100dvh - 250px) * 252 / 217));
+  max-height: 100%;
+  aspect-ratio: 252 / 217;
+  height: auto;
+  touch-action: none;
+}
+body.editor-app .art-frame .canvas-container,
+body.editor-app .art-frame canvas { touch-action: none; }
+body.editor-app .preview-stage {
+  position: absolute;
+  inset: 0;
+  height: auto;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+}
+body.editor-app .preview-stage .turn { position: absolute; right: 12px; bottom: 36px; }
+body.editor-app .preview-stage .turn button { width: 48px; height: 48px; font-size: 28px; }
+body.editor-app .zone-label {
+  position: absolute;
+  left: 12px;
+  bottom: 6px;
+  margin: 0;
+  pointer-events: none;
+}
+body.editor-app .warn { position: absolute; left: 12px; right: 72px; top: 8px; z-index: 3; }
+body.editor-app .fit-view {
+  position: absolute;
+  right: 10px;
+  top: 8px;
+  min-width: 52px;
+  min-height: 44px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(16, 16, 18, 0.9);
+  color: white;
+  z-index: 3;
+}
+body.editor-app .editor-side { display: contents; }
+body.editor-app .panel {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 76px;
+  z-index: 34;
+  max-height: min(58vh, 520px);
+  overflow: auto;
+  touch-action: pan-y;
+  background: rgba(14, 14, 16, 0.98);
+  border-radius: 20px 20px 0 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 14px 14px 18px;
+  margin: 0;
+  transform: translateY(120%);
+  transition: transform 0.22s ease;
+}
+body.editor-app .panel[data-open="true"] { transform: translateY(0); }
+body.editor-app .tabbar {
+  position: fixed;
+  height: 76px;
+  z-index: 40;
+  padding: 4px 4px calc(6px + env(safe-area-inset-bottom));
+}
+body.editor-app .tabbar button {
+  min-height: 64px;
+  font-size: 11px;
+  font-weight: 650;
+}
+body.editor-app .tabbar svg { width: 26px; height: 26px; }
+body.editor-app .shapes { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+body.editor-app .shape { min-height: 86px; }
+body.editor-app .shape svg { width: 40px; height: 40px; }
+body.editor-app .chips button { min-height: 40px; }
+body.editor-app .edit-sheet { bottom: 76px; z-index: 36; max-height: min(50vh, 440px); }
+body.editor-app .btn.wide { min-height: 52px; }

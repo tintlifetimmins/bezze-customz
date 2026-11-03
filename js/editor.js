@@ -1,3 +1,4 @@
+import { CLIPS, CLIP_CATEGORIES } from './clipart.js';
 import { drawWrap, getDesign } from './designs.js';
 import { filterCatalog, loadCatalog } from './catalog.js';
 import { paintProductShot } from './thumbs.js';
@@ -25,25 +26,6 @@ const FONTS = [
 ];
 
 const INKS = ['#ffffff', '#1a1a1a', '#ff2d8f', '#e7c98a', '#fff4e6', '#1c2748', '#f0c9d4', '#d7ecf8'];
-
-const CLIPS = [
-  ['Leaf', 'Nature', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M18 58c10-28 32-40 52-44-4 22-14 46-40 54-2-6-6-8-12-10z"/><path d="M24 52c10-8 20-20 28-34" fill="none" stroke="#fff" stroke-width="2"/></svg>'],
-  ['Sprig', 'Nature', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path d="M40 68c2-16 2-28 0-48" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path fill="#fff" d="M40 50c10-2 16-10 16-10s-8 2-16 8zm0 0c-10-2-16-10-16-10s8 2 16 8zm0-14c9-4 14-12 14-12s-7 3-14 10zm0 0c-9-4-14-12-14-12s7 3 14 10z"/></svg>'],
-  ['Bloom', 'Nature', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><g fill="none" stroke="#fff" stroke-width="2"><circle cx="40" cy="22" r="8"/><circle cx="56" cy="34" r="8"/><circle cx="50" cy="52" r="8"/><circle cx="30" cy="52" r="8"/><circle cx="24" cy="34" r="8"/></g><circle cx="40" cy="38" r="6" fill="#fff"/></svg>'],
-  ['Moon', 'Nature', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M46 12a24 24 0 1 0 16 40A20 20 0 0 1 46 12z"/></svg>'],
-  ['Star', 'Marks', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M40 8l7.2 18.2L67 28.4 52 40.2l5 19.6L40 50.8 23 59.8l5-19.6L13 28.4l19.8-2.2z"/></svg>'],
-  ['Diamond', 'Marks', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M40 8l26 22L40 72 14 30z"/></svg>'],
-  ['Crown', 'Marks', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M12 58l8-30 12 14 8-24 8 24 12-14 8 30z"/><path d="M16 62h48" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>'],
-  ['Spark', 'Marks', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M40 6l4 26 26 4-26 4-4 34-4-34-26-4 26-4z"/></svg>'],
-  ['Ring', 'Frames', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><circle cx="40" cy="40" r="26" fill="none" stroke="#fff" stroke-width="3"/><circle cx="40" cy="40" r="16" fill="none" stroke="#fff" stroke-width="1.5"/></svg>'],
-  ['Crest', 'Frames', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="none" stroke="#fff" stroke-width="2.5" d="M40 10l22 8v18c0 16-10 26-22 32C28 62 18 52 18 36V18z"/></svg>'],
-  ['Laurel', 'Frames', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path d="M24 58c-8-10-10-24-6-38 8 4 14 14 16 24 2 8 0 16-2 22 6-2 14-2 22 2-2-8-2-16 2-24 4-10 12-18 20-22-2 14-8 26-16 34" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>'],
-  ['Seal', 'Frames', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><circle cx="40" cy="40" r="22" fill="none" stroke="#fff" stroke-width="2"/><circle cx="40" cy="40" r="28" fill="none" stroke="#fff" stroke-width="1.2" stroke-dasharray="2 3"/></svg>'],
-  ['Heart', 'Celebrate', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M40 66S16 50 12 34c-3-12 6-22 16-18 5 2 8 6 12 10 4-4 7-8 12-10 10-4 19 6 16 18-4 16-28 32-28 32z"/></svg>'],
-  ['Ribbon', 'Celebrate', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M18 28h44v10H18z"/><path fill="#fff" d="M30 38l-8 24 10-8 8 10V38zm20 0l8 24-10-8-8 10V38z"/></svg>'],
-  ['Wave', 'Celebrate', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path d="M8 44c8-12 12-12 20 0s12 12 20 0 12-12 24 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>'],
-  ['Burst', 'Celebrate', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M40 14l4 14 14-6-6 14 14 4-14 4 6 14-14-6-4 14-4-14-14 6 6-14-14-4 14-4-6-14 14 6z"/></svg>'],
-];
 
 const WRAPS = [
   ['#7a0048', '#ff4fa3', 'Fuchsia'],
@@ -173,7 +155,7 @@ canvas = new fabric.Canvas('c', {
   height: CH,
   enableRetinaScaling: false,
   preserveObjectStacking: true,
-  selection: true,
+  selection: false,
   stopContextMenu: true,
   uniformScaling: true,
   targetFindTolerance: 18,
@@ -355,11 +337,11 @@ function fit() {
   canvas.setDimensions({ width, height: Math.round(width * CH / CW) }, { cssOnly: true });
   const ratio = CW / width;
   const px = (screenPx) => Math.max(1, Math.round(screenPx * ratio));
-  fabric.Object.prototype.cornerSize = px(28);
-  fabric.Object.prototype.touchCornerSize = px(46);
-  fabric.Object.prototype.borderScaleFactor = px(2.4);
-  fabric.Object.prototype.padding = px(10);
-  fabric.Object.prototype.rotatingPointOffset = px(36);
+  fabric.Object.prototype.cornerSize = px(18);
+  fabric.Object.prototype.touchCornerSize = px(36);
+  fabric.Object.prototype.borderScaleFactor = px(2);
+  fabric.Object.prototype.padding = px(6);
+  fabric.Object.prototype.rotatingPointOffset = px(28);
   canvas.requestRenderAll();
 }
 
@@ -825,7 +807,6 @@ async function addClip(name, svg) {
   canvas.add(obj);
   canvas.setActiveObject(obj);
   commit();
-  showSelection(obj);
 }
 
 function loadFile(file) {
@@ -1140,8 +1121,9 @@ function bootUi() {
     }
   });
 
+  document.getElementById('clip-count').textContent = `${CLIPS.length}`;
   const cats = document.getElementById('clip-cats');
-  ['All', 'Nature', 'Marks', 'Frames', 'Celebrate'].forEach((name, i) => {
+  CLIP_CATEGORIES.forEach((name, i) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.textContent = name;
@@ -1342,14 +1324,87 @@ document.getElementById('ideas').addEventListener('input', (event) => {
 });
 document.querySelectorAll('.tabbar button').forEach((button) => {
   button.addEventListener('click', () => {
-    document.querySelectorAll('.tabbar button').forEach((tab) => {
-      tab.setAttribute('aria-current', tab === button ? 'true' : 'false');
-    });
-    document.querySelectorAll('.panel').forEach((panel) => {
-      panel.hidden = panel.id !== `panel-${button.dataset.panel}`;
-    });
+    const name = button.dataset.panel;
+    const panel = document.getElementById(`panel-${name}`);
+    const open = panel.dataset.open === 'true';
+    document.querySelectorAll('.panel').forEach((item) => { item.dataset.open = 'false'; });
+    document.querySelectorAll('.tabbar button').forEach((tab) => tab.setAttribute('aria-current', 'false'));
+    if (!open) {
+      panel.dataset.open = 'true';
+      button.setAttribute('aria-current', 'true');
+      closeSheet();
+    }
   });
 });
+
+function showStage(mode) {
+  const flat = mode === 'flat';
+  document.getElementById('art-zoom').hidden = !flat;
+  document.getElementById('view-stage').hidden = flat;
+  document.getElementById('view-flat').setAttribute('aria-pressed', flat ? 'true' : 'false');
+  document.getElementById('view-3d').setAttribute('aria-pressed', flat ? 'false' : 'true');
+  document.getElementById('fit-view').hidden = !flat;
+  if (!flat && viewer) requestAnimationFrame(() => viewer.resize());
+}
+document.getElementById('view-flat').addEventListener('click', () => showStage('flat'));
+document.getElementById('view-3d').addEventListener('click', () => showStage('3d'));
+
+const zoomLayer = document.getElementById('art-zoom');
+let viewX = 0;
+let viewY = 0;
+let viewScale = 1;
+function applyView() {
+  zoomLayer.style.transform = `translate(${viewX}px, ${viewY}px) scale(${viewScale})`;
+}
+document.getElementById('fit-view').addEventListener('click', () => {
+  viewX = 0;
+  viewY = 0;
+  viewScale = 1;
+  applyView();
+});
+const pointers = new Map();
+let pinch = null;
+let pan = null;
+zoomLayer.addEventListener('touchstart', (event) => {
+  for (const touch of event.changedTouches) pointers.set(touch.identifier, { x: touch.clientX, y: touch.clientY });
+  if (pointers.size === 2) {
+    const [a, b] = [...pointers.values()];
+    pinch = { dist: Math.hypot(a.x - b.x, a.y - b.y) || 1, scale: viewScale, x: viewX, y: viewY };
+  }
+}, { passive: true });
+zoomLayer.addEventListener('touchmove', (event) => {
+  for (const touch of event.changedTouches) {
+    if (pointers.has(touch.identifier)) pointers.set(touch.identifier, { x: touch.clientX, y: touch.clientY });
+  }
+  if (pointers.size >= 2 && pinch) {
+    event.preventDefault();
+    const [a, b] = [...pointers.values()];
+    const dist = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+    viewScale = Math.min(3.2, Math.max(1, pinch.scale * dist / pinch.dist));
+    applyView();
+  }
+}, { passive: false });
+function forgetTouch(event) {
+  for (const touch of event.changedTouches) pointers.delete(touch.identifier);
+  if (pointers.size < 2) pinch = null;
+}
+zoomLayer.addEventListener('touchend', forgetTouch);
+zoomLayer.addEventListener('touchcancel', forgetTouch);
+canvas.on('mouse:down', (opt) => {
+  if (opt.target || pointers.size > 1) { pan = null; return; }
+  const point = opt.e.touches ? opt.e.touches[0] : opt.e;
+  pan = { x: point.clientX, y: point.clientY };
+});
+canvas.on('mouse:move', (opt) => {
+  if (!pan || pointers.size > 1) return;
+  const point = opt.e.touches ? opt.e.touches[0] : opt.e;
+  if (!point) return;
+  viewX += point.clientX - pan.x;
+  viewY += point.clientY - pan.y;
+  pan = { x: point.clientX, y: point.clientY };
+  applyView();
+});
+canvas.on('mouse:up', () => { pan = null; });
 document.querySelectorAll('.ai-chips button').forEach((button) => {
   button.addEventListener('click', () => {
     const on = button.getAttribute('aria-pressed') === 'true';

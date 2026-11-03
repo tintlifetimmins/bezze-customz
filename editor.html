@@ -19,7 +19,7 @@
   }
   </script>
 </head>
-<body>
+<body class="editor-app">
   <div class="sticky-top">
     <p class="test-banner">Test site · sample designs only · no payment is taken</p>
     <header class="editor-bar">
@@ -42,39 +42,38 @@
     </header>
   </div>
   <main class="editor-layout">
-    <div class="editor-main">
-      <div id="art-frame" class="art-frame">
-        <canvas id="c" width="600" height="517"></canvas>
-        <div class="guide trim" aria-hidden="true"></div>
-        <div class="guide safe" aria-hidden="true"></div>
-        <div class="guide axis" id="axis" aria-hidden="true"></div>
-        <div class="guide axis-x" id="axis-x" aria-hidden="true"></div>
+    <div class="view-toggle" role="group" aria-label="Preview">
+      <button type="button" id="view-flat" aria-pressed="true">Wrap</button>
+      <button type="button" id="view-3d" aria-pressed="false">3D</button>
+      <b id="price">$39.99</b>
+    </div>
+    <div class="stage" id="stage">
+      <div id="art-zoom" class="art-zoom">
+        <div id="art-frame" class="art-frame">
+          <canvas id="c" width="600" height="517"></canvas>
+          <div class="guide trim" aria-hidden="true"></div>
+          <div class="guide safe" aria-hidden="true"></div>
+          <div class="guide axis" id="axis" aria-hidden="true"></div>
+          <div class="guide axis-x" id="axis-x" aria-hidden="true"></div>
+        </div>
+      </div>
+      <div class="preview-stage" id="view-stage" data-ready="false" hidden>
+        <p class="loading">Live preview…</p>
+        <canvas id="view3d" aria-label="Live 3D preview of your tumbler. Drag sideways to rotate."></canvas>
+        <img id="view-fallback" alt="Preview of your tumbler" hidden>
+        <div class="turn">
+          <button type="button" id="turn-left" aria-label="Turn left">‹</button>
+          <button type="button" id="turn-right" aria-label="Turn right">›</button>
+        </div>
       </div>
       <p class="zone-label">211 × 246 mm · safe zone</p>
-      <p class="hint">Keep names and photos inside the pink line.</p>
       <p class="warn" id="zone-warn" hidden>Outside the safe zone. Move it in so it prints cleanly.</p>
+      <button type="button" id="fit-view" class="fit-view">Fit</button>
     </div>
     <div class="editor-side">
-      <section class="preview-card">
-        <div class="preview-stage" id="view-stage" data-ready="false">
-          <p class="loading">Live preview…</p>
-          <canvas id="view3d" aria-label="Live 3D preview of your tumbler. Drag sideways to rotate."></canvas>
-          <img id="view-fallback" alt="Preview of your tumbler" hidden>
-        </div>
-        <div class="preview-meta">
-          <div>
-            <strong>Live preview</strong>
-            <p id="saved">Drag to rotate</p>
-            <p class="hint" id="price-note"></p>
-          </div>
-          <div class="turn">
-            <button type="button" id="turn-left" aria-label="Turn left">‹</button>
-            <button type="button" id="turn-right" aria-label="Turn right">›</button>
-          </div>
-          <b id="price">$39.99</b>
-        </div>
-      </section>
-      <section id="panel-designs" class="panel" hidden>
+      <p class="hint" id="saved" hidden>Drag to rotate</p>
+      <p class="hint" id="price-note" hidden></p>
+      <section id="panel-designs" class="panel" data-open="false">
         <h2>Designs</h2>
         <p class="hint">Swap replaces the wrap. Add places a design under your name and monogram.</p>
         <label class="search">
@@ -88,11 +87,23 @@
         <p class="hint" id="drop-rest-note">Past drops and the full sample gallery.</p>
         <div class="design-list" id="drop-rest"></div>
         <p class="hint" id="design-empty" hidden>No sample designs match.</p>
+        <h3 class="drop-heading">Wrap colour</h3>
+        <div class="swatches" id="swatches"></div>
       </section>
-      <section id="panel-text" class="panel">
+      <section id="panel-text" class="panel" data-open="false">
         <h2>Text</h2>
         <button class="btn primary wide" id="add-text" type="button">Add your name</button>
         <p class="hint">Tap a name to select it. Edit it in the sheet, or double-tap to type on the cup.</p>
+        <p class="hint">AI styles — coming soon. 3 free tries, then $1 per 4 tries.</p>
+        <div class="style-row ai-chips" hidden>
+          <button type="button" aria-pressed="false">Soft glam</button>
+        </div>
+        <label class="field" hidden>Ideas
+          <textarea id="ideas" maxlength="140" placeholder="Soft, a gold line, the name in the middle"></textarea>
+        </label>
+        <p class="hint" hidden><span id="ideas-count">0</span>/140</p>
+      </section>
+      <section id="panel-mono" class="panel" data-open="false">
         <h2>Monogram</h2>
         <label class="field">Initials
           <input id="mono-new" maxlength="3" value="A" autocapitalize="characters" autocomplete="off" aria-label="New monogram initials">
@@ -103,76 +114,53 @@
           <button type="button" data-style="stacked">Stacked</button>
           <button type="button" data-style="interlock">Interlock</button>
         </div>
-        <button class="btn ghost wide" id="add-mono" type="button">Add monogram</button>
+        <button class="btn primary wide" id="add-mono" type="button">Add monogram</button>
       </section>
-      <section id="panel-graphics" class="panel" hidden>
-        <h2>Graphics</h2>
-        <div class="chips" id="clip-cats" role="group" aria-label="Shape categories"></div>
-        <label class="field">Search shapes
-          <input id="shape-q" type="search" placeholder="Leaf, crown, laurel">
+      <section id="panel-clip" class="panel" data-open="false">
+        <h2>Clip art <span id="clip-count"></span></h2>
+        <p class="hint">Tap a shape to add it. Tap it on the cup to recolour.</p>
+        <div class="chips" id="clip-cats" role="group" aria-label="Clip art categories"></div>
+        <label class="field">Search clip art
+          <input id="shape-q" type="search" placeholder="Heart, star, leaf">
         </label>
         <div class="shapes" id="shapes"></div>
       </section>
-      <section id="panel-photo" class="panel" hidden>
+      <section id="panel-photo" class="panel" data-open="false">
         <h2>Photo</h2>
         <label class="check"><input id="rights" type="checkbox"> <span>I own the rights to this photo</span></label>
         <input id="photo" type="file" accept="image/*" hidden>
         <button class="btn primary wide" id="pick-photo" type="button" disabled>Choose a photo</button>
         <p class="hint" id="photo-hint">Your photo stays on this device. Nothing is uploaded.</p>
       </section>
-      <section id="panel-colour" class="panel" hidden>
-        <h2>Wrap colour</h2>
-        <p class="hint">Text and shape colours are in the edit sheet after you tap them.</p>
-        <div class="swatches" id="swatches"></div>
-      </section>
-      <section id="panel-ai" class="panel" hidden>
-        <h2>AI</h2>
-        <p class="ai-note">Coming soon</p>
-        <p class="hint">3 free tries, then $1 per 4 tries. AI styles are not live on this test site.</p>
-        <div class="style-row ai-chips">
-          <button type="button" aria-pressed="false">Soft glam</button>
-          <button type="button" aria-pressed="false">Midnight</button>
-          <button type="button" aria-pressed="false">Minimal</button>
-          <button type="button" aria-pressed="false">Floral</button>
-          <button type="button" aria-pressed="false">Sport</button>
-          <button type="button" aria-pressed="false">Watercolour</button>
-        </div>
-        <label class="field">Ideas
-          <textarea id="ideas" maxlength="140" placeholder="Soft, a gold line, the name in the middle"></textarea>
-        </label>
-        <p class="hint"><span id="ideas-count">0</span>/140</p>
-        <button class="btn primary wide" type="button" disabled>Coming soon</button>
-      </section>
-      <div class="layer-box">
-        <div class="actions">
-          <button type="button" id="reset">Start over</button>
-        </div>
+      <section id="panel-layers" class="panel" data-open="false">
+        <h2>Layers</h2>
         <div class="layers" id="layers" aria-label="Layers"></div>
-      </div>
+        <button class="btn ghost wide" type="button" id="reset">Start over</button>
+      </section>
       <nav class="tabbar" aria-label="Tools">
         <button type="button" data-panel="designs">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
           Designs
         </button>
-        <button type="button" data-panel="text" aria-current="true">
+        <button type="button" data-panel="text">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M12 6v12M8 18h8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
           Text
         </button>
-        <button type="button" data-panel="graphics">
+        <button type="button" data-panel="mono">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 15V9h3.2a2.2 2.2 0 0 1 0 4.4H9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          Monogram
+        </button>
+        <button type="button" data-panel="clip">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2 6h6l-5 4 2 6-5-3-5 3 2-6-5-4h6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-          Graphics
+          Clip art
         </button>
         <button type="button" data-panel="photo">
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="10" r="1.4" fill="currentColor"/><path d="M4 16l4.5-4 3 3L16 11l4 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
           Photo
         </button>
-        <button type="button" data-panel="colour">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="1.2"/></svg>
-          Colour
-        </button>
-        <button type="button" data-panel="ai">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l1.5 5.5L19 10l-5.5 1.5L12 17l-1.5-5.5L5 10l5.5-1.5z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-          AI
+        <button type="button" data-panel="layers">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l8 4-8 4-8-4zM4 12l8 4 8-4M4 16l8 4 8-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          Layers
         </button>
       </nav>
     </div>
