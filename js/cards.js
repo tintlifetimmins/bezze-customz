@@ -1,7 +1,8 @@
-import { drawDesign } from './designs.js';
+import { drawDesign, whenDesignReady } from './designs.js';
 import { paintProductShot } from './thumbs.js';
 
 export function mountCards(designs, container) {
+  const paint = () => {
   container.replaceChildren();
   const frag = document.createDocumentFragment();
   for (const design of designs) {
@@ -33,10 +34,15 @@ export function mountCards(designs, container) {
     name.textContent = design.name;
     const meta = document.createElement('p');
     meta.className = 'meta';
-    meta.textContent = 'Sample · $39.99';
+    meta.textContent = `${design.category} · $39.99`;
 
     link.append(thumb, name, meta);
     frag.append(link);
   }
   container.append(frag);
+  };
+  paint();
+  Promise.all(designs.map((design) => whenDesignReady(design.id))).then(() => {
+    if (container.isConnected) paint();
+  });
 }

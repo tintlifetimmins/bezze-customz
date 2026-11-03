@@ -1121,6 +1121,7 @@ body.editor-app .btn.wide { min-height: 52px; }
   .app-nav { display: none; }
   body.has-app-nav { padding-bottom: 0; }
 }
+.legal-note { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
 .search { min-height: 48px; }
 .card { min-height: 48px; }
 .top-links { display: none; gap: 4px; align-items: center; }

@@ -1,5 +1,5 @@
 import { CLIPS, CLIP_CATEGORIES } from './clipart.js';
-import { drawWrap, getDesign } from './designs.js';
+import { designReady, drawWrap, getDesign, whenDesignReady } from './designs.js';
 import { filterCatalog, loadCatalog } from './catalog.js';
 import { paintProductShot } from './thumbs.js';
 import { PRICE, clearDraft, loadDraft, money, saveDraft, setBag } from './store.js';
@@ -170,13 +170,19 @@ function paintWrap(key) {
   const gradient = key && String(key).startsWith('grad:');
   const paintId = gradient ? (baseDesign?.id || 'custom') : (key || baseDesign?.id || 'custom');
   const bare = paintId === 'monogram' && bareMonogram && !gradient;
-  const src = drawWrap(gradient ? key : paintId, CW, CH, { bare });
+  const src = drawWrap(gradient ? key : paintId, CW, CH);
   const img = new fabric.Image(src, { originX: 'left', originY: 'top' });
   canvas.setBackgroundImage(img, () => {
     canvas.requestRenderAll();
     scheduleSync();
   });
   markActiveDesign();
+  if (!gradient && paintId !== 'custom' && !designReady(paintId)) {
+    whenDesignReady(paintId).then(() => {
+      const current = state.wrapKey || baseDesign?.id || 'custom';
+      if (current === paintId) paintWrap(state.wrapKey);
+    });
+  }
 }
 
 function takeSnap() {
@@ -1221,7 +1227,7 @@ function designCard(item) {
   title.textContent = item.name;
   const meta = document.createElement('p');
   meta.className = 'meta';
-  meta.textContent = item.badge ? `Sample · ${item.badge}` : 'Sample';
+  meta.textContent = item.category || 'Sample';
   const actions = document.createElement('div');
   actions.className = 'design-actions';
   const swap = document.createElement('button');
@@ -1254,6 +1260,8 @@ function renderDesignLists() {
   document.getElementById('drop-rest-title').hidden = rest.length === 0;
   document.getElementById('drop-rest-note').hidden = rest.length === 0;
   restBox.hidden = rest.length === 0;
+  const missing = matches.filter((item) => !designReady(item.id));
+  if (missing.length) Promise.all(missing.map((item) => whenDesignReady(item.id))).then(renderDesignLists);
 }
 
 function markActiveDesign() {

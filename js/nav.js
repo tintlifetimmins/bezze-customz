@@ -1,14 +1,5 @@
 import { getBag } from './store.js';
 
-const CATS = [
-  ['All', 'gallery.html'],
-  ['Drops', 'gallery.html?cat=Drops'],
-  ['Floral', 'gallery.html?cat=Floral'],
-  ['Sport', 'gallery.html?cat=Sport'],
-  ['Names', 'gallery.html?cat=Names'],
-  ['Holiday', 'gallery.html?cat=Holiday'],
-];
-
 function currentFile() {
   const last = location.pathname.split('/').filter(Boolean).pop() || 'index.html';
   if (!last.includes('.')) return 'index.html';
@@ -112,16 +103,6 @@ export function initNav() {
       a.href = href;
       a.textContent = label;
       if (href.startsWith(here)) a.setAttribute('aria-current', 'page');
-      wrap.append(a);
-    }
-    const label = document.createElement('p');
-    label.className = 'label';
-    label.textContent = 'Categories';
-    wrap.append(label);
-    for (const [name, href] of CATS) {
-      const a = document.createElement('a');
-      a.href = href;
-      a.textContent = name;
       wrap.append(a);
     }
     drawer.append(wrap);

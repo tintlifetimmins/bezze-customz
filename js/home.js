@@ -1,4 +1,4 @@
-import { DESIGNS, drawDesign } from './designs.js';
+import { DESIGNS, HERO_DESIGN, drawDesign, whenDesignReady } from './designs.js';
 import { mountCards } from './cards.js';
 import { paintProductShot } from './thumbs.js';
 import { nextTuesdayEight, remaining } from './time.js';
@@ -26,7 +26,7 @@ function tick() {
 tick();
 setInterval(tick, 1000);
 
-const drops = DESIGNS.filter((design) => design.badge === 'Drop 014');
+const drops = DESIGNS.filter((design) => design.drop === '014');
 const grid = document.getElementById('drop-grid');
 const paintDrops = () => mountCards(drops, grid);
 paintDrops();
@@ -37,7 +37,8 @@ async function buildHeroWrap() {
   canvas.width = 630;
   canvas.height = 543;
   const ctx = canvas.getContext('2d');
-  drawDesign('rose-noir', ctx, canvas.width, canvas.height);
+  await whenDesignReady(HERO_DESIGN);
+  drawDesign(HERO_DESIGN, ctx, canvas.width, canvas.height);
   try {
     await document.fonts.load('96px "Great Vibes"');
     ctx.fillStyle = '#ffffff';
