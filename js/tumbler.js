@@ -141,12 +141,15 @@ function buildTumbler(texture, rough) {
 }
 
 export class TumblerViewer {
-  constructor(canvas, { spin = false, distance = 74, exposure = 0.95 } = {}) {
+  constructor(canvas, { spin = false, distance = 74, exposure = 0.95, maxPixelRatio = 1.75 } = {}) {
     this.canvas = canvas;
     this.spin = spin;
     this.distance = distance;
+    this.maxPixelRatio = maxPixelRatio;
     this.angle = 0.08;
     this.dragging = false;
+    this.moved = false;
+    this.onRelease = null;
     this.reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     this.trimmed = false;
 
@@ -243,17 +246,25 @@ export class TumblerViewer {
     this.lastX = 0;
     canvas.addEventListener('pointerdown', (event) => {
       this.dragging = true;
+      this.moved = false;
       this.lastX = event.clientX;
       canvas.setPointerCapture?.(event.pointerId);
     });
     canvas.addEventListener('pointermove', (event) => {
       if (!this.dragging) return;
-      this.angle += (event.clientX - this.lastX) * 0.01;
+      const dx = event.clientX - this.lastX;
+      if (Math.abs(dx) > 2) this.moved = true;
+      this.angle += dx * 0.01;
       this.lastX = event.clientX;
       this.group.rotation.y = this.angle;
       if (!this.spin) this.render();
     });
-    const end = () => { this.dragging = false; };
+    const end = () => {
+      if (!this.dragging) return;
+      const moved = this.moved;
+      this.dragging = false;
+      if (this.onRelease) this.onRelease({ moved });
+    };
     canvas.addEventListener('pointerup', end);
     canvas.addEventListener('pointercancel', end);
 
@@ -304,7 +315,7 @@ export class TumblerViewer {
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
     if (!w || !h) return;
-    const pr = Math.min(window.devicePixelRatio || 1, 1.75);
+    const pr = Math.min(window.devicePixelRatio || 1, this.maxPixelRatio || 1.75);
     this.renderer.setPixelRatio(pr);
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;

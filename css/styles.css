@@ -1153,14 +1153,15 @@ body.editor-app .btn.wide { min-height: 52px; }
   border: 0;
   background: rgba(0, 0, 0, 0.5);
 }
-.hero-still { width: auto; height: 100%; max-width: 72%; object-fit: contain; margin: 0 auto; }
+.hero-stage canvas { cursor: grab; }
+.hero-stage canvas:active { cursor: grabbing; }
 @media (max-width: 899px) {
   html, body { scrollbar-width: none; }
   html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
   .hero { margin-bottom: 8px; gap: 2px; }
   .hero h1 { font-size: clamp(42px, 11.5vw, 60px); }
   .hero .kicker { margin-top: 4px; margin-bottom: 4px; }
-  .hero-stage { height: 112px; min-height: 112px; }
+  .hero-stage { height: min(42vh, 300px); min-height: 220px; }
   .ticks { margin: 10px 0 12px; }
   .ticks div { padding: 8px 2px; }
   .line { grid-template-columns: 84px minmax(0, 1fr); }

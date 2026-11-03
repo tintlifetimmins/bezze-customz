@@ -1,4 +1,4 @@
-import { DESIGNS, HERO_DESIGN, drawDesign, whenDesignReady } from './designs.js';
+import { DESIGNS, drawWrap, whenDesignReady } from './designs.js';
 import { mountCards } from './cards.js';
 import { paintProductShot } from './thumbs.js';
 import { nextTuesdayEight, remaining } from './time.js';
@@ -32,61 +32,179 @@ const paintDrops = () => mountCards(drops, grid);
 paintDrops();
 document.fonts.ready.then(paintDrops);
 
-async function buildHeroWrap() {
-  const canvas = document.createElement('canvas');
-  canvas.width = 630;
-  canvas.height = 543;
-  const ctx = canvas.getContext('2d');
-  await whenDesignReady(HERO_DESIGN);
-  drawDesign(HERO_DESIGN, ctx, canvas.width, canvas.height);
-  try {
-    await document.fonts.load('96px "Great Vibes"');
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    let size = 96;
-    const limit = canvas.width * 0.34;
-    ctx.font = size + 'px "Great Vibes", cursive';
-    while (size > 52 && ctx.measureText('Kayla').width > limit) {
-      size -= 4;
-      ctx.font = size + 'px "Great Vibes", cursive';
-    }
-    ctx.shadowColor = 'rgba(0,0,0,.35)';
-    ctx.shadowBlur = 14;
-    ctx.shadowOffsetY = 5;
-    ctx.fillText('Kayla', canvas.width / 2, canvas.height * 0.52);
-  } catch {
-    /* The rose wrap still shows if the script font is blocked. */
+const ORDER = DESIGNS.map((design) => design.id);
+const TURN_MS = 13500;
+const SWAP_MS = 5000;
+const SLOW_SWAP_MS = 12000;
+const FADE_MS = 800;
+
+function wrapCanvas(id) {
+  return drawWrap(id, 1024, 882);
+}
+
+async function prepareWrap(id) {
+  await whenDesignReady(id);
+  return wrapCanvas(id);
+}
+
+function mixWraps(mix, from, to, amount) {
+  const g = mix.getContext('2d');
+  g.globalAlpha = 1;
+  g.drawImage(from, 0, 0, mix.width, mix.height);
+  if (to && amount > 0) {
+    g.globalAlpha = amount;
+    g.drawImage(to, 0, 0, mix.width, mix.height);
+    g.globalAlpha = 1;
   }
-  return canvas;
+}
+
+function ease(t) {
+  return t < 0.5 ? 2 * t * t : 1 - ((-2 * t + 2) ** 2) / 2;
 }
 
 async function startHero() {
   const stage = document.getElementById('hero-stage');
   const view = document.getElementById('hero-view');
-  const wrap = await buildHeroWrap();
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const narrow = window.matchMedia('(max-width: 799px)').matches;
+  let index = 0;
+  let currentId = ORDER[0];
+  const first = await prepareWrap(currentId);
+  const mix = document.createElement('canvas');
+  mix.width = 1024;
+  mix.height = 882;
+  mixWraps(mix, first, null, 0);
+
   const still = new Image();
-  still.src = paintProductShot(wrap, 280).toDataURL('image/jpeg', 0.72);
-  still.alt = 'Sample 20 oz tumbler';
+  still.src = paintProductShot(first, 280).toDataURL('image/jpeg', 0.72);
+  still.alt = '';
   still.className = 'hero-still';
   view.before(still);
   stage.dataset.ready = 'true';
+
+  let viewer = null;
+  let fromWrap = first;
+  let toWrap = null;
+  let fading = false;
+  let fadeStart = 0;
+  let nextWrapPromise = prepareWrap(ORDER[1 % ORDER.length]);
+  let swapAt = 0;
+  let last = 0;
+  let raf = 0;
+  let running = false;
+
+  function label() {
+    const design = DESIGNS.find((item) => item.id === currentId);
+    view.setAttribute('aria-label', design ? `Open ${design.name} in the editor` : 'Open this design in the editor');
+  }
+
+  function openDesign() {
+    location.href = `editor.html?design=${encodeURIComponent(currentId)}`;
+  }
+
+  function beginFade() {
+    if (fading) return;
+    fading = true;
+    const started = performance.now();
+    nextWrapPromise.then((wrap) => {
+      toWrap = wrap;
+      fadeStart = performance.now();
+    });
+    fadeStart = started;
+  }
+
+  function finishFade() {
+    if (!toWrap) return;
+    index = (index + 1) % ORDER.length;
+    currentId = ORDER[index];
+    fromWrap = toWrap;
+    toWrap = null;
+    fading = false;
+    label();
+    mixWraps(mix, fromWrap, null, 0);
+    if (viewer) viewer.setWrap(mix);
+    nextWrapPromise = prepareWrap(ORDER[(index + 1) % ORDER.length]);
+    swapAt = performance.now() + (reduced ? SLOW_SWAP_MS : SWAP_MS);
+  }
+
+  function frame(now) {
+    if (!running || document.hidden) {
+      raf = 0;
+      return;
+    }
+    const dt = last ? now - last : 16;
+    last = now;
+    if (viewer && !viewer.dragging && !reduced) {
+      viewer.turn((dt / TURN_MS) * Math.PI * 2);
+    }
+    if (!fading && now >= swapAt) beginFade();
+    if (fading) {
+      if (toWrap) {
+        const t = Math.min(1, (now - fadeStart) / FADE_MS);
+        mixWraps(mix, fromWrap, toWrap, ease(t));
+        if (viewer) viewer.setWrap(mix);
+        if (t >= 1) finishFade();
+      } else if (now - fadeStart > 4000) {
+        fading = false;
+        swapAt = now + 1000;
+      }
+    }
+    if (viewer) viewer.render();
+    raf = requestAnimationFrame(frame);
+  }
+
+  function startLoop() {
+    if (running) return;
+    running = true;
+    last = 0;
+    raf = requestAnimationFrame(frame);
+  }
+
+  function stopLoop() {
+    running = false;
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+  }
+
+  label();
+  view.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openDesign();
+    }
+  });
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) stopLoop();
+    else {
+      swapAt = performance.now() + (reduced ? SLOW_SWAP_MS : SWAP_MS);
+      startLoop();
+    }
+  });
+
   const boot = async () => {
     try {
       const { TumblerViewer } = await import('./tumbler.js');
-      const viewer = new TumblerViewer(view, { spin: true, distance: 76, exposure: 1.05 });
-      new ResizeObserver(() => viewer.resize()).observe(stage);
-      viewer.setWrap(wrap);
-      requestAnimationFrame(() => {
-        viewer.resize();
-        still.remove();
+      viewer = new TumblerViewer(view, {
+        spin: false,
+        distance: narrow ? 82 : 76,
+        exposure: 1.05,
+        maxPixelRatio: narrow ? 1.15 : 1.5,
       });
+      viewer.onRelease = ({ moved }) => {
+        if (!moved) openDesign();
+      };
+      new ResizeObserver(() => viewer.resize()).observe(stage);
+      viewer.setWrap(mix);
+      viewer.resize();
+      still.remove();
+      swapAt = performance.now() + (reduced ? SLOW_SWAP_MS : SWAP_MS);
+      if (!document.hidden) startLoop();
     } catch (err) {
       console.error(err);
     }
   };
   if ('requestIdleCallback' in window) requestIdleCallback(() => boot(), { timeout: 1600 });
-  else setTimeout(boot, 700);
+  else setTimeout(boot, 400);
 }
 
 startHero();
