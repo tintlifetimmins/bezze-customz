@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { nextDropAt, publishDrops, isPublicDrop, DROP_RELEASE } from '../js/drops.js';
+import { nextDropAt, publishDrops, isPublicDrop, manifestItems, DROP_RELEASE } from '../js/drops.js';
 
 const JPEG = Buffer.from(
   '/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBxISEhUSEhIVFhUVFRUYFxUVFRUYFxUVFRUWFxUVFRUYHSggGBolGxUVITEhJSsrLi4uFx8zODMtNygtLisBCgoKDg0OGhAQGy0lHyUtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLf/AABEIAAgACAMBIgACEQEDEQH/xAAbAAABBQEBAAAAAAAAAAAAAAADAAIEBQYHAf/EABQBAQAAAAAAAAAAAAAAAAAAAAD/xAAUAQEAAAAAAAAAAAAAAAAAAAAA/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8A6gAA/9k=',
@@ -50,8 +50,13 @@ test('instant designs publish immediately and the next drop stays hidden', () =>
   expect(isPublicDrop(shown, now)).toBe(true);
   const published = publishDrops([hidden, shown], now);
   expect(published.map((item) => item.name)).toEqual(['Instant Pine']);
+  const wrapped = publishDrops({ last_synced: '2026-11-04T15:00:00.000Z', items: [hidden, shown] }, now);
+  expect(wrapped.map((item) => item.name)).toEqual(['Instant Pine']);
+  expect(manifestItems({ last_synced: '2026-11-04T15:00:00.000Z', items: [shown] })).toEqual([shown]);
   expect(publishDrops([], now)).toEqual([]);
+  expect(publishDrops({ last_synced: '2026-11-04T15:00:00.000Z', items: [] }, now)).toEqual([]);
   expect(publishDrops(null, now)).toEqual([]);
+  expect(publishDrops({}, now)).toEqual([]);
 });
 
 test('an empty drop feed keeps the sample gallery', async ({ page }) => {
@@ -61,13 +66,15 @@ test('an empty drop feed keeps the sample gallery', async ({ page }) => {
     const response = await fetch(new URL('drops/manifest.json', location.href));
     return response.json();
   });
-  expect(Array.isArray(manifest)).toBe(true);
+  expect(Array.isArray(manifestItems(manifest))).toBe(true);
 });
 
 test('instant feed items show in the gallery and editor, next drop does not', async ({ page }) => {
   const now = new Date();
   const later = nextDropAt(new Date(now.getTime() + 60 * 1000));
-  const manifest = [
+  const manifest = {
+    last_synced: now.toISOString(),
+    items: [
     {
       drive_file_id: 'instant-pine',
       filename: 'instant-pine.jpg',
@@ -90,7 +97,8 @@ test('instant feed items show in the gallery and editor, next drop does not', as
       height: 800,
       preview: 'previews/secret-drop.jpg',
     },
-  ];
+  ],
+  };
   await page.route('**/drops/manifest.json', (route) => route.fulfill({
     status: 200,
     contentType: 'application/json',

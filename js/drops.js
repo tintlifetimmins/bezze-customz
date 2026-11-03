@@ -113,10 +113,16 @@ export function toDropDesign(item, now = new Date(), config = DROP_RELEASE) {
   };
 }
 
+export function manifestItems(manifest) {
+  if (Array.isArray(manifest)) return manifest;
+  if (manifest && Array.isArray(manifest.items)) return manifest.items;
+  return [];
+}
+
 export function publishDrops(manifest, now = new Date(), config = DROP_RELEASE) {
-  if (!Array.isArray(manifest)) return [];
+  const items = manifestItems(manifest);
   const rank = (design) => (design.release === 'instant' ? 0 : design.drop === 'current' ? 1 : 2);
-  return manifest
+  return items
     .map((item) => toDropDesign(item, now, config))
     .filter(Boolean)
     .sort((a, b) => rank(a) - rank(b) || b.newest - a.newest);
