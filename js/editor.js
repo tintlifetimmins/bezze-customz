@@ -144,14 +144,60 @@ fabric.Object.prototype.set({
   cornerColor: '#ffffff',
   cornerStrokeColor: '#ff2d8f',
   cornerSize: 22,
-  touchCornerSize: 40,
+  touchCornerSize: 44,
   transparentCorners: false,
   cornerStyle: 'circle',
-  borderScaleFactor: 2.2,
-  padding: 12,
-  rotatingPointOffset: 36,
+  borderScaleFactor: 2.4,
+  padding: 14,
+  rotatingPointOffset: 40,
   centeredRotation: true,
+  centeredScaling: true,
+  lockScalingFlip: true,
+  lockSkewingX: true,
+  lockSkewingY: true,
 });
+
+function paintRotateHandle(ctx, left, top, styleOverride, fabricObject) {
+  const size = (styleOverride && styleOverride.cornerSize) || fabricObject.cornerSize;
+  ctx.save();
+  ctx.translate(left, top);
+  ctx.beginPath();
+  ctx.arc(0, 0, size / 2, 0, Math.PI * 2);
+  ctx.fillStyle = '#ffffff';
+  ctx.fill();
+  ctx.lineWidth = Math.max(2, size / 9);
+  ctx.strokeStyle = '#ff2d8f';
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.strokeStyle = '#1a1020';
+  ctx.lineWidth = Math.max(1.75, size / 11);
+  ctx.lineCap = 'round';
+  ctx.arc(0, 1, size * 0.22, 0.6, Math.PI * 1.55);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(-size * 0.02, -size * 0.2);
+  ctx.lineTo(size * 0.16, -size * 0.16);
+  ctx.lineTo(size * 0.02, size * 0.02);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function useTouchControls(proto) {
+  const controls = proto && proto.controls;
+  if (!controls) return;
+  delete controls.ml;
+  delete controls.mr;
+  delete controls.mt;
+  delete controls.mb;
+  if (controls.mtr) {
+    controls.mtr.withConnection = true;
+    controls.mtr.render = paintRotateHandle;
+    controls.mtr.cursorStyle = 'crosshair';
+  }
+}
+useTouchControls(fabric.Object.prototype);
+useTouchControls(fabric.Text && fabric.Text.prototype);
+useTouchControls(fabric.IText && fabric.IText.prototype);
 
 const frame = document.getElementById('art-frame');
 canvas = new fabric.Canvas('c', {
@@ -205,13 +251,26 @@ function markSaved() {
   el.textContent = savedOk ? 'Drag to rotate · saved just now' : 'Drag to rotate · not stored on this device';
 }
 
+function flatWrapCanvas() {
+  const out = document.createElement('canvas');
+  out.width = canvas.getWidth();
+  out.height = canvas.getHeight();
+  const ctx = out.getContext('2d');
+  if (canvas.backgroundColor) {
+    ctx.fillStyle = canvas.backgroundColor;
+    ctx.fillRect(0, 0, out.width, out.height);
+  }
+  if (canvas.backgroundImage) canvas.backgroundImage.render(ctx);
+  canvas.getObjects().forEach((obj) => {
+    if (obj.visible !== false) obj.render(ctx);
+  });
+  return out;
+}
+
 function scheduleSync() {
   cancelAnimationFrame(syncFrame);
   syncFrame = requestAnimationFrame(() => {
-    const selected = canvas.getActiveObjects();
-    selected.forEach((obj) => obj.set({ hasControls: false, hasBorders: false }));
-    canvas.renderAll();
-    const source = canvas.getElement();
+    const source = flatWrapCanvas();
     if (viewer) {
       viewer.setWrap(source, { trimmed: false });
       document.getElementById('view-stage').dataset.ready = 'true';
@@ -220,11 +279,6 @@ function scheduleSync() {
       img.hidden = false;
       img.src = paintProductShot(source).toDataURL('image/jpeg', 0.8);
     }
-    selected.forEach((obj) => obj.set({
-      hasControls: !obj.data?.locked,
-      hasBorders: true,
-    }));
-    canvas.requestRenderAll();
   });
 }
 
@@ -350,12 +404,22 @@ function fit() {
   canvas.setDimensions({ width, height: Math.round(width * CH / CW) }, { cssOnly: true });
   const ratio = CW / width;
   const px = (screenPx) => Math.max(1, Math.round(screenPx * ratio));
-  fabric.Object.prototype.cornerSize = px(26);
-  fabric.Object.prototype.touchCornerSize = px(48);
-  fabric.Object.prototype.borderScaleFactor = px(2.5);
-  fabric.Object.prototype.padding = px(14);
-  fabric.Object.prototype.rotatingPointOffset = px(44);
-  canvas.targetFindTolerance = px(24);
+  fabric.Object.prototype.cornerSize = px(30);
+  fabric.Object.prototype.touchCornerSize = px(56);
+  fabric.Object.prototype.borderScaleFactor = px(2.6);
+  fabric.Object.prototype.padding = px(16);
+  fabric.Object.prototype.rotatingPointOffset = px(54);
+  const mtrOwners = [fabric.Object, fabric.Text, fabric.IText, fabric.NameText];
+  mtrOwners.forEach((klass) => {
+    const mtr = klass && klass.prototype && klass.prototype.controls && klass.prototype.controls.mtr;
+    if (!mtr) return;
+    mtr.offsetY = -px(54);
+    mtr.sizeX = px(30);
+    mtr.sizeY = px(30);
+    mtr.touchSizeX = px(56);
+    mtr.touchSizeY = px(56);
+  });
+  canvas.targetFindTolerance = px(28);
   canvas.requestRenderAll();
 }
 
@@ -397,6 +461,41 @@ function checkSafe(obj) {
   const hot = outsideSafe(obj);
   warn.hidden = !hot;
   document.querySelector('.guide.safe').classList.toggle('is-hot', hot);
+}
+
+function containText(obj) {
+  if (!isText(obj)) return;
+  const limit = CW - SAFE * 2;
+  let guard = 0;
+  obj.initDimensions();
+  while (obj.getScaledWidth() > limit && obj.fontSize > 64 && guard < 40) {
+    obj.set('fontSize', Math.max(64, obj.fontSize - 8));
+    obj.initDimensions();
+    guard += 1;
+  }
+  obj.setCoords();
+  const size = document.getElementById('size');
+  const label = document.getElementById('size-label');
+  if (size && label && document.activeElement !== size) {
+    size.value = String(Math.round(obj.fontSize));
+    label.textContent = `${Math.round(obj.fontSize / PX)} mm`;
+  }
+}
+
+function keepSelectionVisible() {
+  if (!phoneEditing()) return;
+  const obj = canvas.getActiveObject();
+  const sheet = document.getElementById('sheet');
+  if (!obj || !sheet || sheet.dataset.open !== 'true') return;
+  const rect = frame.getBoundingClientRect();
+  if (!rect.height) return;
+  const box = obj.getBoundingRect(true, true);
+  const bottom = rect.top + ((box.top + box.height) / CH) * rect.height;
+  const limit = sheet.getBoundingClientRect().top - 28;
+  if (bottom > limit) {
+    viewY -= bottom - limit;
+    applyView();
+  }
 }
 
 function scheduleSyncAndSafe(obj) {
@@ -655,6 +754,7 @@ function syncFieldToObject(obj) {
     if (obj.text !== value) {
       obj.set('text', value);
       obj.initDimensions();
+      containText(obj);
       touchObject(obj);
     }
   } else if (obj.data?.kind === 'monogram') {
@@ -743,6 +843,8 @@ function beginTyping() {
   if (obj.isEditing && obj.exitEditing) obj.exitEditing();
   retainObject = obj;
   preferHandles = false;
+  obj.set({ hasControls: false, hasBorders: true });
+  canvas.requestRenderAll();
   const dock = document.getElementById('type-dock');
   document.body.append(dock);
   dock.hidden = false;
@@ -792,6 +894,7 @@ function finishTyping(options = {}) {
     closeSheet();
     closePanels();
   }
+  keepSelectionVisible();
   updateHandleBar();
   scheduleSync();
 }
@@ -973,14 +1076,8 @@ async function addText() {
     shadowOn: true,
     data: { align: 'center', shadowOn: true },
   });
-  const maxW = 200 * PX;
-  let guard = 0;
-  while (obj.width > maxW && obj.fontSize > 80 && guard < 30) {
-    obj.set('fontSize', obj.fontSize - 8);
-    obj.initDimensions();
-    guard += 1;
-  }
   canvas.add(obj);
+  containText(obj);
   canvas.setActiveObject(obj);
   commit();
   showSelection(obj);
@@ -990,10 +1087,11 @@ async function addText() {
   beginTyping();
 }
 
-function liveText(mutate, doCommit) {
+function liveText(mutate, doCommit, options = {}) {
   const obj = active();
   if (!isText(obj) || filling) return;
   mutate(obj);
+  if (options.contain) containText(obj);
   touchObject(obj);
   obj.dirty = true;
   obj.setCoords();
@@ -1417,7 +1515,7 @@ function bootUi() {
     liveText((obj) => {
       obj.set('fontFamily', font.name);
       obj.initDimensions();
-    }, true);
+    }, true, { contain: true });
     highlightFonts(font.name);
   });
   fontButtons(document.getElementById('mono-fonts'), async (font) => {
@@ -1554,7 +1652,7 @@ document.getElementById('edit-text').addEventListener('input', () => {
   liveText((obj) => {
     obj.set('text', document.getElementById('edit-text').value);
     obj.initDimensions();
-  });
+  }, false, { contain: true });
   refreshFontPreviews();
   if (typing) requestAnimationFrame(revealActive);
 });
@@ -1563,6 +1661,9 @@ document.getElementById('edit-text').addEventListener('change', () => {
 });
 function watchTypeField(field) {
   field.addEventListener('focus', () => beginTyping());
+  field.addEventListener('compositionend', () => {
+    field.dispatchEvent(new Event('input', { bubbles: true }));
+  });
   field.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
@@ -2082,6 +2183,9 @@ window.__bezze = {
       top: obj ? obj.top : null,
       angle: obj ? obj.angle || 0 : null,
       scaleX: obj ? obj.scaleX || 1 : null,
+      textWidth: obj && obj.getScaledWidth ? Math.round(obj.getScaledWidth()) : null,
+      safeWidth: CW - SAFE * 2,
+      controls: obj ? Object.keys(obj.controls) : [],
       box,
       objects: canvas.getObjects().map((item) => ({
         kind: item.data?.kind || '',

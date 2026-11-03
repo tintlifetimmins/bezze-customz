@@ -928,7 +928,7 @@ body.editor-app .zone-label {
   margin: 0;
   pointer-events: none;
 }
-body.editor-app .warn { position: absolute; left: 12px; right: 72px; top: 8px; z-index: 3; }
+body.editor-app .warn { position: absolute; left: 12px; right: 72px; top: 8px; z-index: 3; pointer-events: none; }
 body.editor-app .fit-view {
   position: absolute;
   right: 10px;
