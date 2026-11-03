@@ -256,16 +256,18 @@ function drawNorth(ctx, w, h) {
   grain(ctx, w, h, 28, 11);
 }
 
-function drawMonogram(ctx, w, h) {
+function drawMonogram(ctx, w, h, opts = {}) {
   fillGrad(ctx, w, h, [[0, '#1a120c'], [0.5, '#0e0c0a'], [1, '#221812']]);
   ctx.strokeStyle = 'rgba(232,206,168,.45)';
   ctx.lineWidth = Math.max(1, w * 0.003);
   ctx.strokeRect(w * 0.14, h * 0.14, w * 0.72, h * 0.72);
-  ctx.fillStyle = 'rgba(255,244,230,.92)';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.font = `500 ${w * 0.46}px "Instrument Serif", Georgia, serif`;
-  ctx.fillText('A', w / 2, h * 0.5);
+  if (!opts.bare) {
+    ctx.fillStyle = 'rgba(255,244,230,.92)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `500 ${w * 0.46}px "Instrument Serif", Georgia, serif`;
+    ctx.fillText('A', w / 2, h * 0.5);
+  }
   grain(ctx, w, h, 26, 12);
 }
 
@@ -407,7 +409,11 @@ export function getDesign(id) {
   return DESIGNS.find((design) => design.id === id) || null;
 }
 
-export function drawDesign(id, ctx, w, h) {
+export function drawDesign(id, ctx, w, h, opts) {
+  if (id === 'monogram') {
+    drawMonogram(ctx, w, h, opts || {});
+    return;
+  }
   const draw = DRAW[id] || drawCustom;
   draw(ctx, w, h);
 }
@@ -428,7 +434,7 @@ export function filterDesigns({ q = '', cat = 'All', colour = 'all', sort = 'pop
   return list;
 }
 
-export function drawWrap(key, w, h) {
+export function drawWrap(key, w, h, opts) {
   const canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
@@ -442,7 +448,7 @@ export function drawWrap(key, w, h) {
     ctx.fillRect(0, 0, w, h);
     grain(ctx, w, h, 26, 21);
   } else {
-    drawDesign(key || 'custom', ctx, w, h);
+    drawDesign(key || 'custom', ctx, w, h, opts);
   }
   return canvas;
 }

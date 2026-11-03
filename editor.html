@@ -48,9 +48,11 @@
         <div class="guide trim" aria-hidden="true"></div>
         <div class="guide safe" aria-hidden="true"></div>
         <div class="guide axis" id="axis" aria-hidden="true"></div>
+        <div class="guide axis-x" id="axis-x" aria-hidden="true"></div>
       </div>
       <p class="zone-label">211 × 246 mm · safe zone</p>
       <p class="hint">Keep names and photos inside the pink line.</p>
+      <p class="warn" id="zone-warn" hidden>Outside the safe zone. Move it in so it prints cleanly.</p>
     </div>
     <div class="editor-side">
       <section class="preview-card">
@@ -75,23 +77,24 @@
       <section id="panel-text" class="panel">
         <h2>Text</h2>
         <button class="btn primary wide" id="add-text" type="button">Add your name</button>
-        <p class="hint">Tap the words on the cup to type. Drag to move them.</p>
-        <div class="font-row" id="fonts"></div>
-        <label class="field">Size <span id="size-label">47 mm</span>
-          <input id="size" type="range" min="60" max="480" step="2" value="280">
+        <p class="hint">Tap a name to select it. Edit it in the sheet, or double-tap to type on the cup.</p>
+        <h2>Monogram</h2>
+        <label class="field">Initials
+          <input id="mono-new" maxlength="3" value="A" autocapitalize="characters" autocomplete="off" aria-label="New monogram initials">
         </label>
-        <div class="style-row" id="styles">
-          <button type="button" data-style="none">None</button>
-          <button type="button" data-style="shadow" aria-pressed="true">Shadow</button>
-          <button type="button" data-style="outline">Outline</button>
-          <button type="button" data-style="glow">Glow</button>
-          <button type="button" data-style="arc">Arc</button>
+        <div class="style-row" id="mono-pick">
+          <button type="button" data-style="circle" aria-pressed="true">Circle</button>
+          <button type="button" data-style="vine">Vine</button>
+          <button type="button" data-style="stacked">Stacked</button>
+          <button type="button" data-style="interlock">Interlock</button>
         </div>
+        <button class="btn ghost wide" id="add-mono" type="button">Add monogram</button>
       </section>
       <section id="panel-graphics" class="panel" hidden>
         <h2>Graphics</h2>
+        <div class="chips" id="clip-cats" role="group" aria-label="Shape categories"></div>
         <label class="field">Search shapes
-          <input id="shape-q" type="search" placeholder="Star, leaf, crown">
+          <input id="shape-q" type="search" placeholder="Leaf, crown, laurel">
         </label>
         <div class="shapes" id="shapes"></div>
       </section>
@@ -103,11 +106,8 @@
         <p class="hint" id="photo-hint">Your photo stays on this device. Nothing is uploaded.</p>
       </section>
       <section id="panel-colour" class="panel" hidden>
-        <h2>Colour</h2>
-        <label class="field">Text and shape colour
-          <input id="ink" type="color" value="#ffffff" aria-label="Text colour">
-        </label>
         <h2>Wrap colour</h2>
+        <p class="hint">Text and shape colours are in the edit sheet after you tap them.</p>
         <div class="swatches" id="swatches"></div>
       </section>
       <section id="panel-ai" class="panel" hidden>
@@ -130,10 +130,6 @@
       </section>
       <div class="layer-box">
         <div class="actions">
-          <button type="button" id="align" disabled>Centre</button>
-          <button type="button" id="forward" disabled>Forward</button>
-          <button type="button" id="back" disabled>Back</button>
-          <button type="button" id="delete" disabled>Delete</button>
           <button type="button" id="reset">Start over</button>
         </div>
         <div class="layers" id="layers" aria-label="Layers"></div>
@@ -162,6 +158,78 @@
       </nav>
     </div>
   </main>
+  <aside id="sheet" class="edit-sheet" data-open="false" data-kind="" aria-label="Edit selection">
+    <div class="sheet-head">
+      <h2 id="sheet-title">Edit text</h2>
+      <button type="button" id="sheet-close" aria-label="Close editor">Close</button>
+    </div>
+    <div id="sheet-text">
+      <label class="field">Edit text
+        <input id="edit-text" type="text" autocomplete="off" enterkeyhint="done" aria-label="Edit text">
+      </label>
+      <div class="font-row" id="sheet-fonts"></div>
+      <div class="colour-row">
+        <div class="swatches" id="ink-swatches"></div>
+        <input id="ink" type="color" value="#ffffff" aria-label="Text colour">
+      </div>
+      <label class="field">Size <span id="size-label">33 mm</span>
+        <input id="size" type="range" min="48" max="520" step="2" value="200">
+      </label>
+      <label class="field">Letter spacing <span id="track-label">0</span>
+        <input id="tracking" type="range" min="-40" max="600" step="10" value="0">
+      </label>
+      <label class="check"><input id="curve-on" type="checkbox"> <span>Curved text</span></label>
+      <label class="field">Curve <span id="curve-label">0</span>
+        <input id="curve" type="range" min="-100" max="100" step="1" value="0">
+      </label>
+      <div class="style-row" id="text-toggles">
+        <button type="button" data-toggle="bold">Bold</button>
+        <button type="button" data-toggle="italic">Italic</button>
+        <button type="button" data-toggle="outline">Outline</button>
+        <button type="button" data-toggle="shadow">Shadow</button>
+      </div>
+      <div class="style-row" id="align-row">
+        <button type="button" data-align="left">Left</button>
+        <button type="button" data-align="center" aria-pressed="true">Centre</button>
+        <button type="button" data-align="right">Right</button>
+      </div>
+    </div>
+    <div id="sheet-mono" hidden>
+      <label class="field">Initials
+        <input id="mono-letters" maxlength="3" autocapitalize="characters" autocomplete="off" aria-label="Monogram initials">
+      </label>
+      <div class="style-row" id="mono-styles">
+        <button type="button" data-style="circle">Circle</button>
+        <button type="button" data-style="vine">Vine</button>
+        <button type="button" data-style="stacked">Stacked</button>
+        <button type="button" data-style="interlock">Interlock</button>
+      </div>
+      <div class="font-row" id="mono-fonts"></div>
+      <div class="colour-row">
+        <div class="swatches" id="mono-swatches"></div>
+        <input id="mono-ink" type="color" value="#fff4e6" aria-label="Monogram colour">
+      </div>
+      <label class="field">Size <span id="mono-size-label">33 mm</span>
+        <input id="mono-size" type="range" min="80" max="520" step="2" value="200">
+      </label>
+    </div>
+    <div id="sheet-clip" hidden>
+      <p class="hint">Colour</p>
+      <div class="colour-row">
+        <div class="swatches" id="clip-swatches"></div>
+        <input id="clip-ink" type="color" value="#ffffff" aria-label="Shape colour">
+      </div>
+    </div>
+    <div class="style-row obj-actions" id="obj-actions">
+      <button type="button" id="align">Centre</button>
+      <button type="button" id="duplicate">Duplicate</button>
+      <button type="button" id="rotate-step">Rotate</button>
+      <button type="button" id="forward">Forward</button>
+      <button type="button" id="back">Back</button>
+      <button type="button" id="lock">Lock</button>
+      <button type="button" id="delete">Delete</button>
+    </div>
+  </aside>
   <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
   <script type="module" src="js/editor.js"></script>
 </body>

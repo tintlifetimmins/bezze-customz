@@ -10,6 +10,7 @@ initNav();
 const PX = 6;
 const CW = 252 * PX;
 const CH = 217 * PX;
+const SAFE = 15 * PX;
 
 const FONTS = [
   { name: 'Great Vibes', css: '"Great Vibes", cursive', sample: 'Kayla' },
@@ -22,17 +23,25 @@ const FONTS = [
   { name: 'Outfit', css: 'Outfit, Arial, sans-serif', sample: 'Kayla' },
 ];
 
+const INKS = ['#ffffff', '#1a1a1a', '#ff2d8f', '#e7c98a', '#fff4e6', '#1c2748', '#f0c9d4', '#d7ecf8'];
+
 const CLIPS = [
-  ['Star', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#fff" d="M32 4l7.2 16.8L57 23.2 44.2 35l3.6 18L32 44.8 16.2 53l3.6-18L7 23.2l17.8-2.4z"/></svg>'],
-  ['Heart', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#fff" d="M32 54S12 42 8 28c-3-10 4-18 13-16 5 1 8 5 11 9 3-4 6-8 11-9 9-2 16 6 13 16-4 14-24 26-24 26z"/></svg>'],
-  ['Flower', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><g fill="#fff"><circle cx="32" cy="14" r="8"/><circle cx="48" cy="24" r="8"/><circle cx="42" cy="42" r="8"/><circle cx="22" cy="42" r="8"/><circle cx="16" cy="24" r="8"/><circle cx="32" cy="32" r="7"/></g></svg>'],
-  ['Leaf', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#fff" d="M12 40c8-22 28-30 42-32-2 16-8 36-30 44-2-6-6-10-12-12z"/><path fill="#111" d="M18 44c8-6 16-16 22-28" stroke="#111" stroke-width="2"/></svg>'],
-  ['Crown', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#fff" d="M8 46l6-24 10 12 8-20 8 20 10-12 6 24z"/></svg>'],
-  ['Moon', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#fff" d="M36 8a22 22 0 1 0 18 32A18 18 0 0 1 36 8z"/></svg>'],
-  ['Diamond', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#fff" d="M32 6l22 18-22 34L10 24z"/></svg>'],
-  ['Spark', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#fff" d="M32 2l4 22 22 4-22 4-4 30-4-30-22-4 22-4z"/></svg>'],
-  ['Ring', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#fff" fill-rule="evenodd" d="M32 6a26 26 0 1 0 0 52 26 26 0 0 0 0-52zm0 12a14 14 0 1 1 0 28 14 14 0 0 1 0-28z"/></svg>'],
-  ['Petal', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path fill="#fff" d="M32 6c8 12 20 20 20 32a20 20 0 0 1-40 0C12 26 24 18 32 6z"/></svg>'],
+  ['Leaf', 'Nature', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M18 58c10-28 32-40 52-44-4 22-14 46-40 54-2-6-6-8-12-10z"/><path d="M24 52c10-8 20-20 28-34" fill="none" stroke="#fff" stroke-width="2"/></svg>'],
+  ['Sprig', 'Nature', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path d="M40 68c2-16 2-28 0-48" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path fill="#fff" d="M40 50c10-2 16-10 16-10s-8 2-16 8zm0 0c-10-2-16-10-16-10s8 2 16 8zm0-14c9-4 14-12 14-12s-7 3-14 10zm0 0c-9-4-14-12-14-12s7 3 14 10z"/></svg>'],
+  ['Bloom', 'Nature', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><g fill="none" stroke="#fff" stroke-width="2"><circle cx="40" cy="22" r="8"/><circle cx="56" cy="34" r="8"/><circle cx="50" cy="52" r="8"/><circle cx="30" cy="52" r="8"/><circle cx="24" cy="34" r="8"/></g><circle cx="40" cy="38" r="6" fill="#fff"/></svg>'],
+  ['Moon', 'Nature', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M46 12a24 24 0 1 0 16 40A20 20 0 0 1 46 12z"/></svg>'],
+  ['Star', 'Marks', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M40 8l7.2 18.2L67 28.4 52 40.2l5 19.6L40 50.8 23 59.8l5-19.6L13 28.4l19.8-2.2z"/></svg>'],
+  ['Diamond', 'Marks', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M40 8l26 22L40 72 14 30z"/></svg>'],
+  ['Crown', 'Marks', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M12 58l8-30 12 14 8-24 8 24 12-14 8 30z"/><path d="M16 62h48" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>'],
+  ['Spark', 'Marks', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M40 6l4 26 26 4-26 4-4 34-4-34-26-4 26-4z"/></svg>'],
+  ['Ring', 'Frames', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><circle cx="40" cy="40" r="26" fill="none" stroke="#fff" stroke-width="3"/><circle cx="40" cy="40" r="16" fill="none" stroke="#fff" stroke-width="1.5"/></svg>'],
+  ['Crest', 'Frames', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="none" stroke="#fff" stroke-width="2.5" d="M40 10l22 8v18c0 16-10 26-22 32C28 62 18 52 18 36V18z"/></svg>'],
+  ['Laurel', 'Frames', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path d="M24 58c-8-10-10-24-6-38 8 4 14 14 16 24 2 8 0 16-2 22 6-2 14-2 22 2-2-8-2-16 2-24 4-10 12-18 20-22-2 14-8 26-16 34" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/></svg>'],
+  ['Seal', 'Frames', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><circle cx="40" cy="40" r="22" fill="none" stroke="#fff" stroke-width="2"/><circle cx="40" cy="40" r="28" fill="none" stroke="#fff" stroke-width="1.2" stroke-dasharray="2 3"/></svg>'],
+  ['Heart', 'Celebrate', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M40 66S16 50 12 34c-3-12 6-22 16-18 5 2 8 6 12 10 4-4 7-8 12-10 10-4 19 6 16 18-4 16-28 32-28 32z"/></svg>'],
+  ['Ribbon', 'Celebrate', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M18 28h44v10H18z"/><path fill="#fff" d="M30 38l-8 24 10-8 8 10V38zm20 0l8 24-10-8-8 10V38z"/></svg>'],
+  ['Wave', 'Celebrate', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path d="M8 44c8-12 12-12 20 0s12 12 20 0 12-12 24 0" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>'],
+  ['Burst', 'Celebrate', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><path fill="#fff" d="M40 14l4 14 14-6-6 14 14 4-14 4 6 14-14-6-4 14-4-14-14 6 6-14-14-4 14-4-6-14 14 6z"/></svg>'],
 ];
 
 const WRAPS = [
@@ -46,41 +55,113 @@ const WRAPS = [
   ['#1b2148', '#c5d0ff', 'Ink'],
 ];
 
+fabric.NameText = fabric.util.createClass(fabric.IText, {
+  type: 'name-text',
+  initialize(text, options) {
+    options = options || {};
+    this.callSuper('initialize', text, options);
+    this.curve = options.curve || 0;
+  },
+  toObject(extra) {
+    return this.callSuper('toObject', ['data', 'curve'].concat(extra || []));
+  },
+  initDimensions() {
+    this.callSuper('initDimensions');
+    if (this.curve) this.height += (Math.abs(this.curve) / 100) * this.fontSize * 0.9;
+  },
+  _render(ctx) {
+    if (!this.curve || this.isEditing) {
+      this.callSuper('_render', ctx);
+      return;
+    }
+    this._renderArc(ctx);
+  },
+  _renderArc(ctx) {
+    const chars = Array.from(this.text || '');
+    const count = chars.length;
+    if (!count) return;
+    const curve = Math.max(-100, Math.min(100, this.curve || 0));
+    const mag = Math.abs(curve) / 100;
+    const spread = 0.3 + mag * 1.15;
+    const step = count > 1 ? spread / (count - 1) : 0;
+    const start = -spread / 2;
+    const width = Math.max(this.width, this.fontSize * 0.5 * count);
+    const radius = width / Math.max(0.35, spread);
+    ctx.save();
+    ctx.font = this._getFontDeclaration();
+    ctx.fillStyle = this.fill || '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (this.shadow) {
+      ctx.shadowColor = this.shadow.color;
+      ctx.shadowBlur = this.shadow.blur;
+      ctx.shadowOffsetX = this.shadow.offsetX;
+      ctx.shadowOffsetY = this.shadow.offsetY;
+    }
+    const strokeOn = this.stroke && this.strokeWidth > 0;
+    if (strokeOn) {
+      ctx.lineWidth = this.strokeWidth;
+      ctx.strokeStyle = this.stroke;
+      ctx.lineJoin = 'round';
+    }
+    const ySign = curve > 0 ? 1 : -1;
+    const points = chars.map((_, i) => {
+      const angle = start + step * i;
+      return {
+        angle,
+        x: Math.sin(angle) * radius,
+        y: ySign * (1 - Math.cos(angle)) * radius,
+      };
+    });
+    const shift = points.reduce((sum, point) => sum + point.y, 0) / points.length;
+    points.forEach((point, i) => {
+      ctx.save();
+      ctx.translate(point.x, point.y - shift);
+      ctx.rotate(point.angle * (curve > 0 ? 1 : -1));
+      if (strokeOn) ctx.strokeText(chars[i], 0, 0);
+      ctx.fillText(chars[i], 0, 0);
+      ctx.restore();
+    });
+    ctx.restore();
+  },
+});
+
+fabric.NameText.fromObject = function fromObject(object, callback) {
+  const clone = Object.assign({}, object);
+  if (clone.styles) clone.styles = fabric.util.stylesFromArray(clone.styles, clone.text);
+  return fabric.Object._fromObject('NameText', clone, callback, 'text');
+};
+
 const params = new URLSearchParams(location.search);
 const design = getDesign(params.get('design'));
 const mode = design ? 'gallery' : 'custom';
 const currentId = () => design?.id || 'custom';
 
-const state = {
-  font: 'Great Vibes',
-  ink: design?.ink || '#ffffff',
-  style: 'shadow',
-  wrapKey: null,
-  savedAt: 0,
-};
-
-const sizeInput = document.getElementById('size');
-const inkInput = document.getElementById('ink');
-inkInput.value = toHex(state.ink);
-
+const state = { font: 'Great Vibes', ink: design?.ink || '#ffffff', savedAt: 0, monoStyle: 'circle' };
 let canvas;
 let viewer = null;
 let stack = [];
 let index = -1;
 let lock = false;
+let filling = false;
 let syncFrame = 0;
 let savedOk = true;
 let warned = false;
 let resetArm = 0;
 
-fabric.Object.prototype.borderColor = '#ff2d8f';
-fabric.Object.prototype.cornerColor = '#ffffff';
-fabric.Object.prototype.cornerStrokeColor = '#ff2d8f';
-fabric.Object.prototype.cornerSize = 16;
-fabric.Object.prototype.transparentCorners = false;
-fabric.Object.prototype.cornerStyle = 'circle';
-fabric.Object.prototype.borderScaleFactor = 1.6;
-fabric.Object.prototype.padding = 8;
+fabric.Object.prototype.set({
+  borderColor: '#ff2d8f',
+  cornerColor: '#ffffff',
+  cornerStrokeColor: '#ff2d8f',
+  cornerSize: 22,
+  touchCornerSize: 40,
+  transparentCorners: false,
+  cornerStyle: 'circle',
+  borderScaleFactor: 2.2,
+  padding: 12,
+  rotatingPointOffset: 36,
+  centeredRotation: true,
+});
 
 const frame = document.getElementById('art-frame');
 canvas = new fabric.Canvas('c', {
@@ -91,13 +172,14 @@ canvas = new fabric.Canvas('c', {
   selection: true,
   stopContextMenu: true,
   uniformScaling: true,
+  targetFindTolerance: 18,
   backgroundColor: '#140810',
 });
-canvas.targetFindTolerance = 10;
 
 function paintWrap(key) {
   state.wrapKey = key || null;
-  const src = drawWrap(key || currentId(), CW, CH);
+  const bare = !key && design?.id === 'monogram';
+  const src = drawWrap(key || currentId(), CW, CH, { bare });
   const img = new fabric.Image(src, { originX: 'left', originY: 'top' });
   canvas.setBackgroundImage(img, () => {
     canvas.requestRenderAll();
@@ -108,7 +190,7 @@ function paintWrap(key) {
 function takeSnap() {
   return JSON.stringify({
     wrapKey: state.wrapKey,
-    objects: canvas.toJSON(['data']).objects,
+    objects: canvas.toJSON(['data', 'curve']).objects,
   });
 }
 
@@ -126,6 +208,8 @@ function markSaved() {
 function scheduleSync() {
   cancelAnimationFrame(syncFrame);
   syncFrame = requestAnimationFrame(() => {
+    const selected = canvas.getActiveObjects();
+    selected.forEach((obj) => obj.set({ hasControls: false, hasBorders: false }));
     canvas.renderAll();
     const source = canvas.getElement();
     if (viewer) {
@@ -136,13 +220,18 @@ function scheduleSync() {
       img.hidden = false;
       img.src = paintProductShot(source).toDataURL('image/jpeg', 0.8);
     }
+    selected.forEach((obj) => obj.set({
+      hasControls: !obj.data?.locked,
+      hasBorders: true,
+    }));
+    canvas.requestRenderAll();
   });
 }
 
 function isCustom() {
   if (mode === 'custom') return true;
   if (state.wrapKey) return true;
-  return canvas.getObjects().length > 0;
+  return canvas.getObjects().some((obj) => !obj.data?.starter);
 }
 
 function updatePrice() {
@@ -156,15 +245,25 @@ function updatePrice() {
   return value;
 }
 
+function isText(obj) {
+  return !!obj && (obj.type === 'name-text' || obj.type === 'i-text' || obj.data?.kind === 'text');
+}
+
+function layerName(obj) {
+  if (obj.data?.kind === 'monogram') return `Monogram ${obj.data.initials || ''}`.trim();
+  if (isText(obj)) return obj.text || 'Name';
+  if (obj.data?.kind === 'clip') return obj.data.name || 'Shape';
+  if (obj.data?.kind === 'photo') return 'Photo';
+  return 'Layer';
+}
+
 function refreshLayers() {
   const box = document.getElementById('layers');
   const active = canvas.getActiveObject();
   box.replaceChildren();
   const objects = canvas.getObjects();
-  document.getElementById('align').disabled = !active;
-  document.getElementById('forward').disabled = !active;
-  document.getElementById('back').disabled = !active;
-  document.getElementById('delete').disabled = !active;
+  const actions = document.getElementById('obj-actions');
+  if (actions) actions.hidden = !active;
   if (!objects.length) {
     const empty = document.createElement('p');
     empty.className = 'hint';
@@ -181,18 +280,10 @@ function refreshLayers() {
     button.addEventListener('click', () => {
       canvas.setActiveObject(obj);
       canvas.requestRenderAll();
-      syncFromSelection();
+      showSelection(obj);
     });
     box.append(button);
   }
-}
-
-function layerName(obj) {
-  if (obj.data?.kind === 'arc') return obj.data.text || 'Curved name';
-  if (obj.data?.kind === 'text' || obj.type === 'i-text') return obj.text || 'Name';
-  if (obj.data?.kind === 'clip') return obj.data.name || 'Shape';
-  if (obj.data?.kind === 'photo') return 'Photo';
-  return 'Layer';
 }
 
 function commit() {
@@ -229,6 +320,7 @@ function restore(snap) {
     refreshLayers();
     scheduleSync();
     updateHistory();
+    closeSheet();
   });
 }
 
@@ -249,8 +341,15 @@ function redo() {
 function fit() {
   const width = Math.floor(frame.clientWidth);
   if (!width) return;
-  const height = Math.round(width * CH / CW);
-  canvas.setDimensions({ width, height }, { cssOnly: true });
+  canvas.setDimensions({ width, height: Math.round(width * CH / CW) }, { cssOnly: true });
+  const ratio = CW / width;
+  const px = (screenPx) => Math.max(1, Math.round(screenPx * ratio));
+  fabric.Object.prototype.cornerSize = px(28);
+  fabric.Object.prototype.touchCornerSize = px(46);
+  fabric.Object.prototype.borderScaleFactor = px(2.4);
+  fabric.Object.prototype.padding = px(10);
+  fabric.Object.prototype.rotatingPointOffset = px(36);
+  canvas.requestRenderAll();
 }
 
 let lastFit = 0;
@@ -263,7 +362,7 @@ new ResizeObserver(() => {
 fit();
 
 function toHex(value) {
-  if (typeof value === 'string' && value.startsWith('#') && value.length >= 7) return value.slice(0, 7);
+  if (typeof value === 'string' && /^#([0-9a-f]{6})/i.test(value)) return value.slice(0, 7);
   return '#ffffff';
 }
 
@@ -275,86 +374,180 @@ function contrast(hex) {
   return (r * 299 + g * 587 + b * 114) / 1000 > 160 ? '#1a1020' : '#ffffff';
 }
 
-function isTexty(obj) {
-  return !!obj && (obj.type === 'i-text' || obj.data?.kind === 'text' || obj.data?.kind === 'arc');
+function touchObject(obj) {
+  if (obj?.data?.starter) obj.data.starter = false;
 }
 
-function readMeta(obj) {
-  if (obj.data?.kind === 'arc') return { ...obj.data, left: obj.left, top: obj.top };
-  return {
-    text: obj.text,
-    fontFamily: obj.fontFamily,
-    fontSize: obj.fontSize,
-    fill: typeof obj.fill === 'string' ? obj.fill : state.ink,
-    style: obj.data?.style || 'none',
-    left: obj.left,
-    top: obj.top,
-  };
+function outsideSafe(obj) {
+  if (!obj) return false;
+  obj.setCoords();
+  const box = obj.getBoundingRect(true, true);
+  return box.left < SAFE - 2 || box.top < SAFE - 2 || box.left + box.width > CW - SAFE + 2 || box.top + box.height > CH - SAFE + 2;
 }
 
-function paintStyle(obj, style) {
-  const apply = (node, size) => {
-    node.set({ stroke: null, shadow: null, strokeWidth: 0 });
-    if (style === 'shadow') {
-      node.set('shadow', new fabric.Shadow({ color: 'rgba(0,0,0,.45)', blur: 14, offsetX: 0, offsetY: 8 }));
-    } else if (style === 'outline') {
-      node.set({
-        stroke: contrast(node.fill),
-        strokeWidth: Math.max(2, (size || 80) / 28),
-        paintFirst: 'stroke',
-      });
-    } else if (style === 'glow') {
-      node.set('shadow', new fabric.Shadow({ color: node.fill || '#fff', blur: 28, offsetX: 0, offsetY: 0 }));
-    }
-  };
-  if (obj.data?.kind === 'arc') {
-    obj.forEachObject((child) => apply(child, child.fontSize));
-    obj.dirty = true;
-    return;
+function checkSafe(obj) {
+  const warn = document.getElementById('zone-warn');
+  const hot = outsideSafe(obj);
+  warn.hidden = !hot;
+  document.querySelector('.guide.safe').classList.toggle('is-hot', hot);
+}
+
+function scheduleSyncAndSafe(obj) {
+  checkSafe(obj || canvas.getActiveObject());
+  scheduleSync();
+}
+
+function makeName(meta) {
+  const text = new fabric.NameText(meta.text || 'Your name', {
+    fontFamily: meta.fontFamily || state.font,
+    fontSize: meta.fontSize || 200,
+    fontWeight: meta.fontWeight || 'normal',
+    fontStyle: meta.fontStyle || 'normal',
+    fill: meta.fill || state.ink,
+    charSpacing: meta.charSpacing || 0,
+    curve: meta.curve || 0,
+    textAlign: meta.textAlign || 'center',
+    originX: 'center',
+    originY: 'center',
+    left: meta.left || CW / 2,
+    top: meta.top || CH / 2,
+    angle: meta.angle || 0,
+    editable: true,
+    data: { kind: 'text', ...(meta.data || {}) },
+  });
+  applyTextPaint(text, meta);
+  return text;
+}
+
+function applyTextPaint(obj, meta = {}) {
+  const outline = meta.outline ?? obj.data?.outline;
+  const shadow = meta.shadowOn ?? obj.data?.shadowOn;
+  if (obj.data) {
+    obj.data.outline = !!outline;
+    obj.data.shadowOn = !!shadow;
   }
-  apply(obj, obj.fontSize);
+  obj.set('paintFirst', 'stroke');
+  if (outline) {
+    obj.set({ stroke: meta.stroke || contrast(obj.fill), strokeWidth: Math.max(2, obj.fontSize / 18) });
+  } else {
+    obj.set({ stroke: null, strokeWidth: 0 });
+  }
+  obj.set('shadow', shadow
+    ? new fabric.Shadow({ color: 'rgba(0,0,0,.45)', blur: 18, offsetX: 0, offsetY: 10 })
+    : null);
+  obj.dirty = true;
+  if (obj.initDimensions) obj.initDimensions();
+  obj.setCoords();
 }
 
-function buildText(meta) {
-  return new fabric.IText(meta.text || 'Your name', {
-    fontFamily: meta.fontFamily,
-    fontSize: meta.fontSize,
-    fill: meta.fill,
+function cleanInitials(value) {
+  return (value || '').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3);
+}
+
+function letter(text, opts) {
+  return new fabric.Text(text, {
+    fontFamily: opts.fontFamily,
+    fontSize: opts.fontSize,
+    fill: opts.fill,
     originX: 'center',
     originY: 'center',
-    left: meta.left || CW / 2,
-    top: meta.top || CH / 2,
-    data: { kind: 'text', style: meta.style || 'none', fontFamily: meta.fontFamily, fill: meta.fill },
+    left: opts.left || 0,
+    top: opts.top || 0,
+    charSpacing: opts.charSpacing || 0,
   });
 }
 
-function buildArc(meta) {
-  const text = meta.text || 'Your name';
-  const chars = [...text];
-  const size = meta.fontSize || 200;
-  const radius = size * 2.15;
-  const spread = Math.min(Math.PI * 0.9, Math.max(0.2, (chars.length - 1) * 0.32));
-  const step = chars.length > 1 ? spread / (chars.length - 1) : 0;
-  const start = -spread / 2;
-  const letters = chars.map((ch, i) => {
-    const angle = start + i * step;
-    return new fabric.Text(ch, {
-      fontFamily: meta.fontFamily,
-      fontSize: size,
-      fill: meta.fill,
-      left: Math.sin(angle) * radius,
-      top: -Math.cos(angle) * radius,
-      angle: (angle * 180) / Math.PI,
-      originX: 'center',
-      originY: 'center',
+function ring(radius, strokeWidth, fill) {
+  return new fabric.Circle({
+    radius,
+    fill: 'transparent',
+    stroke: fill,
+    strokeWidth,
+    originX: 'center',
+    originY: 'center',
+    left: 0,
+    top: 0,
+  });
+}
+
+function buildMonogram(meta) {
+  const initials = cleanInitials(meta.initials) || 'A';
+  const style = meta.style || 'circle';
+  const fontFamily = meta.fontFamily || 'Cinzel';
+  const fill = meta.fill || '#fff4e6';
+  const fontSize = meta.fontSize || 200;
+  const items = [];
+  if (style === 'circle' || style === 'vine') {
+    items.push(ring(fontSize * 0.78, Math.max(3, fontSize * 0.045), fill));
+    items.push(ring(fontSize * 0.64, Math.max(1.5, fontSize * 0.02), fill));
+    if (style === 'vine') {
+      items.push(new fabric.Path('M -70 30 C -40 -40 40 -40 70 30', {
+        fill: 'transparent',
+        stroke: fill,
+        strokeWidth: Math.max(2, fontSize * 0.03),
+        left: 0,
+        top: -fontSize * 0.15,
+        originX: 'center',
+        originY: 'center',
+        scaleX: fontSize / 180,
+        scaleY: fontSize / 180,
+      }));
+      items.push(new fabric.Path('M -70 -10 C -30 50 30 50 70 -10', {
+        fill: 'transparent',
+        stroke: fill,
+        strokeWidth: Math.max(2, fontSize * 0.03),
+        left: 0,
+        top: fontSize * 0.2,
+        originX: 'center',
+        originY: 'center',
+        scaleX: fontSize / 180,
+        scaleY: fontSize / 180,
+      }));
+    }
+    items.push(letter(initials, {
+      fontFamily,
+      fill,
+      fontSize: initials.length > 2 ? fontSize * 0.42 : initials.length === 2 ? fontSize * 0.5 : fontSize * 0.7,
+      charSpacing: initials.length > 1 ? 40 : 0,
+      top: initials.length === 1 ? fontSize * 0.02 : 0,
+    }));
+  } else if (style === 'stacked') {
+    initials.split('').forEach((ch, i) => {
+      items.push(letter(ch, {
+        fontFamily,
+        fill,
+        fontSize: fontSize * 0.48,
+        top: (i - (initials.length - 1) / 2) * fontSize * 0.52,
+      }));
     });
-  });
-  return new fabric.Group(letters, {
+  } else {
+    const chars = initials.split('');
+    const mid = chars.length === 3 ? chars[1] : chars[chars.length - 1];
+    items.push(letter(mid, { fontFamily, fill, fontSize }));
+    if (chars.length === 2) {
+      items.push(letter(chars[0], { fontFamily, fill, fontSize: fontSize * 0.62, left: -fontSize * 0.38, top: fontSize * 0.08 }));
+    }
+    if (chars.length === 3) {
+      items.push(letter(chars[0], { fontFamily, fill, fontSize: fontSize * 0.56, left: -fontSize * 0.46, top: fontSize * 0.1 }));
+      items.push(letter(chars[2], { fontFamily, fill, fontSize: fontSize * 0.56, left: fontSize * 0.46, top: fontSize * 0.1 }));
+    }
+  }
+  return new fabric.Group(items, {
     originX: 'center',
     originY: 'center',
     left: meta.left || CW / 2,
     top: meta.top || CH / 2,
-    data: { kind: 'arc', text, fontFamily: meta.fontFamily, fontSize: size, fill: meta.fill, style: 'arc' },
+    subTargetCheck: false,
+    data: {
+      kind: 'monogram',
+      initials,
+      style,
+      fontFamily,
+      fill,
+      fontSize,
+      starter: !!meta.starter,
+      locked: !!meta.locked,
+    },
   });
 }
 
@@ -366,129 +559,241 @@ function replaceObject(prev, next) {
   if (at >= 0) next.moveTo(at);
   lock = false;
   canvas.setActiveObject(next);
+  return next;
 }
 
-function highlightFont() {
-  document.querySelectorAll('#fonts button').forEach((button) => {
-    button.setAttribute('aria-pressed', button.dataset.font === state.font ? 'true' : 'false');
+function setLocked(obj, locked) {
+  obj.set({
+    lockMovementX: locked,
+    lockMovementY: locked,
+    lockScalingX: locked,
+    lockScalingY: locked,
+    lockRotation: locked,
+    hasControls: !locked,
   });
+  if (!obj.data) obj.data = {};
+  obj.data.locked = locked;
+  const button = document.getElementById('lock');
+  if (button) button.textContent = locked ? 'Unlock' : 'Lock';
+  canvas.requestRenderAll();
 }
 
-function highlightStyle() {
-  document.querySelectorAll('#styles button').forEach((button) => {
-    button.setAttribute('aria-pressed', button.dataset.style === state.style ? 'true' : 'false');
-  });
+function active() {
+  return canvas.getActiveObject();
 }
 
-function syncFromSelection() {
-  const obj = canvas.getActiveObject();
-  refreshLayers();
-  if (!isTexty(obj)) return;
-  const meta = readMeta(obj);
-  state.font = meta.fontFamily || state.font;
-  state.style = meta.style || state.style;
-  if (typeof meta.fill === 'string') {
-    state.ink = meta.fill;
-    inkInput.value = toHex(meta.fill);
+function showSelection(obj) {
+  const sheet = document.getElementById('sheet');
+  if (!obj) {
+    closeSheet();
+    return;
   }
-  if (meta.fontSize) sizeInput.value = String(meta.fontSize);
-  document.getElementById('size-label').textContent = Math.round(Number(sizeInput.value) / PX) + ' mm';
-  highlightFont();
-  highlightStyle();
+  const kind = obj.data?.kind === 'monogram' ? 'monogram' : isText(obj) ? 'text' : obj.data?.kind === 'clip' ? 'clip' : 'object';
+  sheet.dataset.open = 'true';
+  sheet.dataset.kind = kind;
+  document.body.classList.add('sheet-open');
+  document.getElementById('sheet-text').hidden = kind !== 'text';
+  document.getElementById('sheet-mono').hidden = kind !== 'monogram';
+  document.getElementById('sheet-clip').hidden = kind !== 'clip';
+  document.getElementById('sheet-title').textContent = kind === 'monogram' ? 'Edit monogram' : kind === 'text' ? 'Edit text' : kind === 'clip' ? 'Edit shape' : 'Selected';
+  document.getElementById('obj-actions').hidden = false;
+  document.getElementById('lock').textContent = obj.data?.locked ? 'Unlock' : 'Lock';
+  if (kind === 'text' && document.activeElement !== document.getElementById('edit-text')) fillTextSheet(obj);
+  if (kind === 'monogram' && document.activeElement !== document.getElementById('mono-letters')) fillMonoSheet(obj);
+  if (kind === 'clip') document.getElementById('clip-ink').value = toHex(obj.data?.fill || '#ffffff');
+  refreshLayers();
+  checkSafe(obj);
+}
+
+function closeSheet() {
+  const sheet = document.getElementById('sheet');
+  sheet.dataset.open = 'false';
+  sheet.dataset.kind = '';
+  document.body.classList.remove('sheet-open');
+  document.getElementById('zone-warn').hidden = true;
+  document.querySelector('.guide.safe').classList.remove('is-hot');
+  refreshLayers();
+}
+
+function fillTextSheet(obj) {
+  filling = true;
+  document.getElementById('edit-text').value = obj.text || '';
+  document.getElementById('size').value = String(Math.round(obj.fontSize || 200));
+  document.getElementById('size-label').textContent = `${Math.round((obj.fontSize || 200) / PX)} mm`;
+  document.getElementById('tracking').value = String(obj.charSpacing || 0);
+  document.getElementById('track-label').textContent = String(obj.charSpacing || 0);
+  document.getElementById('curve').value = String(obj.curve || 0);
+  document.getElementById('curve-label').textContent = String(obj.curve || 0);
+  document.getElementById('curve-on').checked = !!obj.curve;
+  document.getElementById('ink').value = toHex(obj.fill);
+  state.font = obj.fontFamily || state.font;
+  highlightFonts(obj.fontFamily);
+  press('bold', (obj.fontWeight === 'bold' || obj.fontWeight === 700));
+  press('italic', obj.fontStyle === 'italic');
+  press('outline', !!obj.data?.outline);
+  press('shadow', !!obj.data?.shadowOn);
+  document.querySelectorAll('#align-row button').forEach((button) => {
+    button.setAttribute('aria-pressed', button.dataset.align === (obj.data?.align || 'center') ? 'true' : 'false');
+  });
+  filling = false;
+}
+
+function fillMonoSheet(obj) {
+  filling = true;
+  document.getElementById('mono-letters').value = obj.data.initials || 'A';
+  document.querySelectorAll('#mono-styles button').forEach((button) => {
+    button.setAttribute('aria-pressed', button.dataset.style === obj.data.style ? 'true' : 'false');
+  });
+  const shown = Math.round((obj.data.fontSize || 200) * (obj.scaleX || 1));
+  document.getElementById('mono-size').value = String(shown);
+  document.getElementById('mono-size-label').textContent = `${Math.round(shown / PX)} mm`;
+  document.getElementById('mono-ink').value = toHex(obj.data.fill || '#fff4e6');
+  highlightFonts(obj.data.fontFamily, '#mono-fonts');
+  filling = false;
+}
+
+function press(name, on) {
+  const button = document.querySelector(`#text-toggles [data-toggle="${name}"]`);
+  if (button) button.setAttribute('aria-pressed', on ? 'true' : 'false');
+}
+
+function highlightFonts(name, root = '#sheet-fonts') {
+  document.querySelectorAll(`${root} button`).forEach((button) => {
+    button.setAttribute('aria-pressed', button.dataset.font === name ? 'true' : 'false');
+  });
+}
+
+function paintSwatches(container, onPick) {
+  INKS.forEach((color) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'swatch';
+    button.style.background = color;
+    button.setAttribute('aria-label', color);
+    button.addEventListener('click', () => onPick(color));
+    container.append(button);
+  });
+}
+
+function fontButtons(container, onPick) {
+  FONTS.forEach((font) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'font-chip';
+    button.dataset.font = font.name;
+    button.style.fontFamily = font.css;
+    button.textContent = font.sample;
+    button.addEventListener('click', () => onPick(font));
+    container.append(button);
+  });
+}
+
+async function ensureFont(name) {
+  try { await document.fonts.load(`200px "${name}"`); } catch { /* fallback */ }
 }
 
 async function addText() {
-  try { await document.fonts.load(`300px "${state.font}"`); } catch { /* fallback font */ }
-  const meta = {
+  await ensureFont(state.font);
+  const obj = makeName({
     text: 'Your name',
     fontFamily: state.font,
-    fontSize: Number(sizeInput.value),
+    fontSize: 200,
     fill: state.ink,
-    style: state.style,
-    left: CW / 2,
-    top: CH / 2,
-  };
-  const obj = state.style === 'arc' ? buildArc(meta) : buildText(meta);
-  if (obj.type === 'i-text') {
-    const maxW = 222 * PX;
-    let guard = 0;
-    while (obj.width > maxW && obj.fontSize > 80 && guard < 40) {
-      obj.set('fontSize', obj.fontSize - 8);
-      guard += 1;
-    }
-    sizeInput.value = String(obj.fontSize);
+    shadowOn: true,
+    data: { align: 'center', shadowOn: true },
+  });
+  const maxW = 200 * PX;
+  let guard = 0;
+  while (obj.width > maxW && obj.fontSize > 80 && guard < 30) {
+    obj.set('fontSize', obj.fontSize - 8);
+    obj.initDimensions();
+    guard += 1;
   }
-  paintStyle(obj, state.style);
   canvas.add(obj);
   canvas.setActiveObject(obj);
   commit();
+  showSelection(obj);
+  const field = document.getElementById('edit-text');
+  field.focus();
+  field.select();
 }
 
-function applyStyle(style) {
-  state.style = style;
-  highlightStyle();
-  const obj = canvas.getActiveObject();
-  if (!isTexty(obj)) return;
-  const meta = readMeta(obj);
-  meta.style = style;
-  let next = obj;
-  if (style === 'arc' && obj.data?.kind !== 'arc') {
-    next = buildArc(meta);
-    replaceObject(obj, next);
-  } else if (style !== 'arc' && obj.data?.kind === 'arc') {
-    next = buildText(meta);
-    replaceObject(obj, next);
-  }
-  if (next.data) next.data.style = style;
-  paintStyle(next, style);
+function liveText(mutate, doCommit) {
+  const obj = active();
+  if (!isText(obj) || filling) return;
+  mutate(obj);
+  touchObject(obj);
+  obj.dirty = true;
+  obj.setCoords();
   canvas.requestRenderAll();
+  scheduleSyncAndSafe(obj);
+  if (doCommit) commit();
+}
+
+function updateMonogram(patch, doCommit) {
+  const obj = active();
+  if (!obj || obj.data?.kind !== 'monogram' || filling) return;
+  const next = buildMonogram({
+    ...obj.data,
+    ...patch,
+    starter: false,
+    left: obj.left,
+    top: obj.top,
+  });
+  next.set({ angle: obj.angle || 0, scaleX: obj.scaleX || 1, scaleY: obj.scaleY || 1 });
+  if (obj.data.locked) setLocked(next, true);
+  replaceObject(obj, next);
+  canvas.requestRenderAll();
+  scheduleSyncAndSafe(next);
+  if (doCommit) commit();
+  else refreshLayers();
+}
+
+async function addMonogram(initials, style) {
+  const fontName = 'Cinzel';
+  await ensureFont(fontName);
+  const obj = buildMonogram({
+    initials: cleanInitials(initials) || 'A',
+    style: style || state.monoStyle,
+    fontFamily: fontName,
+    fill: '#fff4e6',
+    fontSize: 210,
+    left: CW / 2,
+    top: CH / 2,
+  });
+  canvas.add(obj);
+  canvas.setActiveObject(obj);
   commit();
+  showSelection(obj);
+  document.getElementById('mono-letters').focus();
+  document.getElementById('mono-letters').select();
 }
 
-async function applyFont(font) {
-  state.font = font.name;
-  highlightFont();
-  try { await document.fonts.load(`200px "${font.name}"`); } catch { /* keep going */ }
-  const obj = canvas.getActiveObject();
-  if (!isTexty(obj)) return;
-  if (obj.data?.kind === 'arc') {
-    obj.data.fontFamily = font.name;
-    obj.forEachObject((child) => child.set('fontFamily', font.name));
-    obj.dirty = true;
-  } else {
-    obj.set('fontFamily', font.name);
-    if (obj.data) obj.data.fontFamily = font.name;
-  }
-  canvas.requestRenderAll();
-  commit();
-}
-
-function tintSelection(color) {
-  state.ink = color;
-  const obj = canvas.getActiveObject();
-  if (!obj) return;
-  if (obj.data?.kind === 'clip') {
-    paintClip(obj, color);
-  } else if (obj.data?.kind === 'arc') {
-    obj.data.fill = color;
-    obj.forEachObject((child) => child.set('fill', color));
-    obj.dirty = true;
-    paintStyle(obj, 'arc');
-  } else if (obj.type === 'i-text' || obj.data?.kind === 'text') {
-    obj.set('fill', color);
-    if (obj.data) obj.data.fill = color;
-    paintStyle(obj, obj.data?.style || state.style);
-  }
-  canvas.requestRenderAll();
+function seedMonogram() {
+  if (design?.id !== 'monogram') return;
+  if (canvas.getObjects().some((obj) => obj.data?.kind === 'monogram')) return;
+  canvas.add(buildMonogram({
+    initials: 'A',
+    style: 'circle',
+    fontFamily: 'Cinzel',
+    fill: '#fff4e6',
+    fontSize: 210,
+    starter: true,
+    left: CW / 2,
+    top: CH / 2,
+  }));
 }
 
 function paintClip(obj, color) {
   const visit = (node) => {
     if (!node) return;
     if (node.fill && node.fill !== 'none') node.set('fill', color);
+    if (node.stroke && node.stroke !== 'none') node.set('stroke', color);
     (node._objects || []).forEach(visit);
   };
   visit(obj);
+  if (!obj.data) obj.data = { kind: 'clip' };
+  obj.data.fill = color;
   obj.dirty = true;
 }
 
@@ -502,14 +807,14 @@ function loadSVG(svg) {
 
 async function addClip(name, svg) {
   const obj = await loadSVG(svg);
-  obj.set({ originX: 'center', originY: 'center', data: { kind: 'clip', name } });
-  obj.scaleToWidth(CW * 0.22);
-  obj.set({ left: CW / 2, top: CH / 2 });
-  paintClip(obj, state.ink);
+  obj.set({ originX: 'center', originY: 'center', left: CW / 2, top: CH / 2, data: { kind: 'clip', name, fill: '#ffffff' } });
+  obj.scaleToWidth(CW * 0.28);
+  paintClip(obj, '#ffffff');
   obj.setCoords();
   canvas.add(obj);
   canvas.setActiveObject(obj);
   commit();
+  showSelection(obj);
 }
 
 function loadFile(file) {
@@ -528,8 +833,7 @@ async function addPhoto(file) {
     return;
   }
   const source = await loadFile(file);
-  const max = 1600;
-  const scale = Math.min(1, max / Math.max(source.width, source.height));
+  const scale = Math.min(1, 1600 / Math.max(source.width, source.height));
   const copy = document.createElement('canvas');
   copy.width = Math.max(1, Math.round(source.width * scale));
   copy.height = Math.max(1, Math.round(source.height * scale));
@@ -546,6 +850,7 @@ async function addPhoto(file) {
   canvas.add(image);
   canvas.setActiveObject(image);
   commit();
+  showSelection(image);
   const longest = Math.max(source.width, source.height);
   hint.textContent = longest < 1400
     ? 'This photo may look soft when printed. A larger image stays sharper.'
@@ -553,39 +858,88 @@ async function addPhoto(file) {
 }
 
 function removeActive() {
-  const obj = canvas.getActiveObject();
+  const obj = active();
   if (!obj) return;
   canvas.remove(obj);
+  closeSheet();
   commit();
 }
 
 function alignCenter() {
-  const obj = canvas.getActiveObject();
-  if (!obj) return;
+  const obj = active();
+  if (!obj || obj.data?.locked) return;
   obj.center();
   obj.setCoords();
   canvas.requestRenderAll();
+  checkSafe(obj);
+  commit();
+}
+
+function alignEdge(where) {
+  const obj = active();
+  if (!obj || obj.data?.locked) return;
+  obj.setCoords();
+  const box = obj.getBoundingRect(true, true);
+  const center = obj.getCenterPoint();
+  let nextX = center.x;
+  if (where === 'left') nextX = SAFE + box.width / 2;
+  if (where === 'right') nextX = CW - SAFE - box.width / 2;
+  if (where === 'center') nextX = CW / 2;
+  obj.setPositionByOrigin(new fabric.Point(nextX, center.y), 'center', 'center');
+  if (isText(obj)) {
+    obj.set('textAlign', where === 'center' ? 'center' : where);
+    if (!obj.data) obj.data = { kind: 'text' };
+    obj.data.align = where;
+  }
+  obj.setCoords();
+  canvas.requestRenderAll();
+  checkSafe(obj);
   commit();
 }
 
 function nudge(dir) {
-  const obj = canvas.getActiveObject();
+  const obj = active();
   if (!obj) return;
   if (dir > 0) canvas.bringForward(obj);
   else canvas.sendBackwards(obj);
   commit();
 }
 
+function duplicate() {
+  const obj = active();
+  if (!obj) return;
+  obj.clone((clone) => {
+    clone.set({ left: (obj.left || 0) + 30, top: (obj.top || 0) + 30 });
+    if (clone.data) clone.data = { ...obj.data, starter: false };
+    canvas.add(clone);
+    canvas.setActiveObject(clone);
+    commit();
+    showSelection(clone);
+  }, ['data', 'curve']);
+}
+
+function rotateStep() {
+  const obj = active();
+  if (!obj || obj.data?.locked) return;
+  obj.rotate((obj.angle || 0) + 15);
+  obj.setCoords();
+  canvas.requestRenderAll();
+  commit();
+}
+
 function productTitle() {
-  const text = canvas.getObjects().find((obj) => obj.data?.kind === 'text' || obj.data?.kind === 'arc');
-  const label = text ? (text.data?.kind === 'arc' ? text.data.text : text.text) : '';
-  const clean = (label || '').trim();
-  if (clean && clean !== 'Your name') return `Custom — “${clean}”`;
+  const text = canvas.getObjects().find((obj) => isText(obj));
+  const mono = canvas.getObjects().find((obj) => obj.data?.kind === 'monogram');
+  const label = text ? (text.text || '').trim() : '';
+  if (label && label !== 'Your name') return `Custom — “${label}”`;
+  if (mono && !mono.data.starter) return `Custom — ${mono.data.initials}`;
   if (isCustom()) return design ? `Custom — ${design.name}` : 'Custom tumbler';
-  return design.name;
+  return design ? design.name : 'Custom tumbler';
 }
 
 function exportPrintCanvas() {
+  const editing = canvas.getActiveObject();
+  if (editing?.exitEditing) editing.exitEditing();
   canvas.discardActiveObject();
   canvas.renderAll();
   const src = canvas.getElement();
@@ -594,17 +948,7 @@ function exportPrintCanvas() {
   const out = document.createElement('canvas');
   out.width = 1000;
   out.height = Math.round(1000 * (211 / 246));
-  out.getContext('2d').drawImage(
-    src,
-    bleedX,
-    bleedY,
-    src.width - bleedX * 2,
-    src.height - bleedY * 2,
-    0,
-    0,
-    out.width,
-    out.height,
-  );
+  out.getContext('2d').drawImage(src, bleedX, bleedY, src.width - bleedX * 2, src.height - bleedY * 2, 0, 0, out.width, out.height);
   return out;
 }
 
@@ -612,13 +956,12 @@ function review() {
   const print = exportPrintCanvas();
   let png = print.toDataURL('image/png');
   if (png.length > 3500000) png = print.toDataURL('image/jpeg', 0.86);
-  const unit = updatePrice();
   setBag({
     v: 1,
     designId: currentId(),
     title: productTitle(),
     subtitle: `20 oz · ${design?.name || 'Custom wrap'} · Full wrap`,
-    unitPrice: unit,
+    unitPrice: updatePrice(),
     qty: 1,
     customized: isCustom(),
     wrapPng: png,
@@ -629,30 +972,65 @@ function review() {
 }
 
 function bootUi() {
-  const fontRow = document.getElementById('fonts');
-  for (const font of FONTS) {
+  fontButtons(document.getElementById('sheet-fonts'), async (font) => {
+    state.font = font.name;
+    await ensureFont(font.name);
+    liveText((obj) => {
+      obj.set('fontFamily', font.name);
+      obj.initDimensions();
+    }, true);
+    highlightFonts(font.name);
+  });
+  fontButtons(document.getElementById('mono-fonts'), async (font) => {
+    await ensureFont(font.name);
+    updateMonogram({ fontFamily: font.name }, true);
+    highlightFonts(font.name, '#mono-fonts');
+  });
+  paintSwatches(document.getElementById('ink-swatches'), (color) => {
+    document.getElementById('ink').value = color;
+    liveText((obj) => {
+      obj.set('fill', color);
+      if (obj.data?.outline) obj.set('stroke', contrast(color));
+    }, true);
+  });
+  paintSwatches(document.getElementById('mono-swatches'), (color) => {
+    document.getElementById('mono-ink').value = color;
+    updateMonogram({ fill: color }, true);
+  });
+  paintSwatches(document.getElementById('clip-swatches'), (color) => {
+    document.getElementById('clip-ink').value = color;
+    const obj = active();
+    if (obj?.data?.kind === 'clip') {
+      paintClip(obj, color);
+      canvas.requestRenderAll();
+      commit();
+    }
+  });
+
+  const cats = document.getElementById('clip-cats');
+  ['All', 'Nature', 'Marks', 'Frames', 'Celebrate'].forEach((name, i) => {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'font-chip';
-    button.dataset.font = font.name;
-    button.style.fontFamily = font.css;
-    button.textContent = font.sample;
-    button.addEventListener('click', () => applyFont(font));
-    fontRow.append(button);
-  }
-  highlightFont();
-  highlightStyle();
-
+    button.textContent = name;
+    button.dataset.cat = name;
+    button.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+    button.addEventListener('click', () => {
+      cats.querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', item === button ? 'true' : 'false'));
+      filterClips();
+    });
+    cats.append(button);
+  });
   const shapes = document.getElementById('shapes');
-  for (const [name, svg] of CLIPS) {
+  CLIPS.forEach(([name, category, svg]) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'shape';
     button.dataset.name = name.toLowerCase();
-    button.innerHTML = svg + `<span>${name}</span>`;
+    button.dataset.cat = category;
+    button.innerHTML = `${svg}<span>${name}</span>`;
     button.addEventListener('click', () => addClip(name, svg));
     shapes.append(button);
-  }
+  });
 
   const swatches = document.getElementById('swatches');
   if (design) {
@@ -666,7 +1044,7 @@ function bootUi() {
     });
     swatches.append(original);
   }
-  for (const [bottom, top, label] of WRAPS) {
+  WRAPS.forEach(([bottom, top, label]) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'swatch';
@@ -677,55 +1055,149 @@ function bootUi() {
       commit();
     });
     swatches.append(button);
-  }
+  });
+}
+
+function filterClips() {
+  const cat = document.querySelector('#clip-cats button[aria-pressed="true"]')?.dataset.cat || 'All';
+  const query = document.getElementById('shape-q').value.trim().toLowerCase();
+  document.querySelectorAll('#shapes button').forEach((button) => {
+    const catOk = cat === 'All' || button.dataset.cat === cat;
+    const textOk = !query || button.dataset.name.includes(query) || button.dataset.cat.toLowerCase().includes(query);
+    button.hidden = !(catOk && textOk);
+  });
 }
 
 bootUi();
 
 document.getElementById('add-text').addEventListener('click', addText);
-document.getElementById('styles').addEventListener('click', (event) => {
+document.getElementById('add-mono').addEventListener('click', () => {
+  addMonogram(document.getElementById('mono-new').value, state.monoStyle);
+});
+document.getElementById('mono-pick').addEventListener('click', (event) => {
   const button = event.target.closest('button');
   if (!button) return;
-  applyStyle(button.dataset.style);
+  state.monoStyle = button.dataset.style;
+  document.querySelectorAll('#mono-pick button').forEach((item) => {
+    item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+  });
 });
-sizeInput.addEventListener('input', () => {
-  document.getElementById('size-label').textContent = Math.round(Number(sizeInput.value) / PX) + ' mm';
-  const obj = canvas.getActiveObject();
-  if (!isTexty(obj)) return;
-  const size = Number(sizeInput.value);
-  if (obj.data?.kind === 'arc') {
-    const base = obj.data.fontSize || size;
-    obj.set({ scaleX: size / base, scaleY: size / base });
-    obj.setCoords();
-  } else {
+document.getElementById('edit-text').addEventListener('input', () => {
+  liveText((obj) => {
+    obj.set('text', document.getElementById('edit-text').value);
+    obj.initDimensions();
+  });
+});
+document.getElementById('edit-text').addEventListener('change', () => {
+  if (isText(active())) commit();
+});
+document.getElementById('size').addEventListener('input', () => {
+  const size = Number(document.getElementById('size').value);
+  document.getElementById('size-label').textContent = `${Math.round(size / PX)} mm`;
+  liveText((obj) => {
     obj.set('fontSize', size);
-    paintStyle(obj, obj.data?.style || state.style);
-  }
+    if (obj.data?.outline) obj.set('strokeWidth', Math.max(2, size / 18));
+    obj.initDimensions();
+  });
+});
+document.getElementById('size').addEventListener('change', () => { if (isText(active())) commit(); });
+document.getElementById('tracking').addEventListener('input', () => {
+  const spacing = Number(document.getElementById('tracking').value);
+  document.getElementById('track-label').textContent = String(spacing);
+  liveText((obj) => {
+    obj.set('charSpacing', spacing);
+    obj.initDimensions();
+  });
+});
+document.getElementById('tracking').addEventListener('change', () => { if (isText(active())) commit(); });
+document.getElementById('curve-on').addEventListener('change', (event) => {
+  const on = event.target.checked;
+  const slider = document.getElementById('curve');
+  if (on && Number(slider.value) === 0) slider.value = '55';
+  if (!on) slider.value = '0';
+  document.getElementById('curve-label').textContent = slider.value;
+  liveText((obj) => { obj.curve = Number(slider.value); obj.initDimensions(); }, true);
+});
+document.getElementById('curve').addEventListener('input', () => {
+  const value = document.getElementById('curve').value;
+  document.getElementById('curve-label').textContent = value;
+  document.getElementById('curve-on').checked = Number(value) !== 0;
+  liveText((obj) => { obj.curve = Number(value); obj.initDimensions(); });
+});
+document.getElementById('curve').addEventListener('change', () => { if (isText(active())) commit(); });
+document.getElementById('ink').addEventListener('input', (event) => {
+  liveText((obj) => {
+    obj.set('fill', event.target.value);
+    if (obj.data?.outline) obj.set('stroke', contrast(event.target.value));
+  });
+});
+document.getElementById('ink').addEventListener('change', () => { if (isText(active())) commit(); });
+document.getElementById('text-toggles').addEventListener('click', (event) => {
+  const button = event.target.closest('button');
+  if (!button) return;
+  const on = button.getAttribute('aria-pressed') !== 'true';
+  button.setAttribute('aria-pressed', on ? 'true' : 'false');
+  const toggle = button.dataset.toggle;
+  liveText((obj) => {
+    if (!obj.data) obj.data = { kind: 'text' };
+    if (toggle === 'bold') obj.set('fontWeight', on ? 'bold' : 'normal');
+    if (toggle === 'italic') obj.set('fontStyle', on ? 'italic' : 'normal');
+    if (toggle === 'outline') applyTextPaint(obj, { outline: on, shadowOn: obj.data.shadowOn, stroke: contrast(obj.fill) });
+    if (toggle === 'shadow') applyTextPaint(obj, { outline: obj.data.outline, shadowOn: on, stroke: obj.stroke });
+    obj.initDimensions();
+  }, true);
+});
+document.getElementById('align-row').addEventListener('click', (event) => {
+  const button = event.target.closest('button');
+  if (!button) return;
+  alignEdge(button.dataset.align);
+  document.querySelectorAll('#align-row button').forEach((item) => {
+    item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+  });
+});
+document.getElementById('mono-letters').addEventListener('input', () => {
+  const letters = cleanInitials(document.getElementById('mono-letters').value);
+  updateMonogram({ initials: letters || 'A' });
+});
+document.getElementById('mono-letters').addEventListener('change', () => {
+  if (active()?.data?.kind === 'monogram') commit();
+});
+document.getElementById('mono-styles').addEventListener('click', (event) => {
+  const button = event.target.closest('button');
+  if (!button) return;
+  updateMonogram({ style: button.dataset.style }, true);
+  document.querySelectorAll('#mono-styles button').forEach((item) => {
+    item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+  });
+});
+document.getElementById('mono-ink').addEventListener('input', (event) => updateMonogram({ fill: event.target.value }));
+document.getElementById('mono-ink').addEventListener('change', () => { if (active()?.data?.kind === 'monogram') commit(); });
+document.getElementById('mono-size').addEventListener('input', () => {
+  const size = Number(document.getElementById('mono-size').value);
+  document.getElementById('mono-size-label').textContent = `${Math.round(size / PX)} mm`;
+  const obj = active();
+  if (!obj || obj.data?.kind !== 'monogram' || filling) return;
+  const base = obj.data.fontSize || 200;
+  obj.set({ scaleX: size / base, scaleY: size / base });
+  touchObject(obj);
+  obj.setCoords();
+  canvas.requestRenderAll();
+  scheduleSyncAndSafe(obj);
+});
+document.getElementById('mono-size').addEventListener('change', () => { if (active()?.data?.kind === 'monogram') commit(); });
+document.getElementById('clip-ink').addEventListener('input', (event) => {
+  const obj = active();
+  if (obj?.data?.kind !== 'clip') return;
+  paintClip(obj, event.target.value);
   canvas.requestRenderAll();
   scheduleSync();
 });
-sizeInput.addEventListener('change', () => {
-  if (isTexty(canvas.getActiveObject())) commit();
-});
-inkInput.addEventListener('input', () => {
-  tintSelection(inkInput.value);
-  scheduleSync();
-});
-inkInput.addEventListener('change', () => {
-  if (canvas.getActiveObject()) commit();
-});
-document.getElementById('shape-q').addEventListener('input', (event) => {
-  const q = event.target.value.trim().toLowerCase();
-  document.querySelectorAll('#shapes button').forEach((button) => {
-    button.hidden = Boolean(q) && !button.dataset.name.includes(q);
-  });
-});
+document.getElementById('clip-ink').addEventListener('change', () => { if (active()?.data?.kind === 'clip') commit(); });
+document.getElementById('shape-q').addEventListener('input', filterClips);
 document.getElementById('rights').addEventListener('change', (event) => {
   document.getElementById('pick-photo').disabled = !event.target.checked;
 });
-document.getElementById('pick-photo').addEventListener('click', () => {
-  document.getElementById('photo').click();
-});
+document.getElementById('pick-photo').addEventListener('click', () => document.getElementById('photo').click());
 document.getElementById('photo').addEventListener('change', (event) => {
   const file = event.target.files && event.target.files[0];
   event.target.value = '';
@@ -740,7 +1212,7 @@ document.querySelectorAll('.tabbar button').forEach((button) => {
       tab.setAttribute('aria-current', tab === button ? 'true' : 'false');
     });
     document.querySelectorAll('.panel').forEach((panel) => {
-      panel.hidden = panel.id !== 'panel-' + button.dataset.panel;
+      panel.hidden = panel.id !== `panel-${button.dataset.panel}`;
     });
   });
 });
@@ -756,6 +1228,19 @@ document.getElementById('align').addEventListener('click', alignCenter);
 document.getElementById('forward').addEventListener('click', () => nudge(1));
 document.getElementById('back').addEventListener('click', () => nudge(-1));
 document.getElementById('delete').addEventListener('click', removeActive);
+document.getElementById('duplicate').addEventListener('click', duplicate);
+document.getElementById('rotate-step').addEventListener('click', rotateStep);
+document.getElementById('lock').addEventListener('click', () => {
+  const obj = active();
+  if (!obj) return;
+  setLocked(obj, !obj.data?.locked);
+  commit();
+});
+document.getElementById('sheet-close').addEventListener('click', () => {
+  canvas.discardActiveObject();
+  canvas.requestRenderAll();
+  closeSheet();
+});
 document.getElementById('review').addEventListener('click', review);
 document.getElementById('turn-left').addEventListener('click', () => viewer && viewer.turn(-0.35));
 document.getElementById('turn-right').addEventListener('click', () => viewer && viewer.turn(0.35));
@@ -774,13 +1259,14 @@ document.getElementById('reset').addEventListener('click', (event) => {
   lock = false;
   state.wrapKey = null;
   paintWrap(null);
+  seedMonogram();
   stack = [];
   index = -1;
+  closeSheet();
   commit();
 });
 document.getElementById('share').addEventListener('click', async () => {
-  const print = exportPrintCanvas();
-  const png = print.toDataURL('image/png');
+  const png = exportPrintCanvas().toDataURL('image/png');
   const url = new URL(design ? `editor.html?design=${design.id}` : 'editor.html?mode=custom', location.href).href;
   const result = await shareDesign({
     title: 'Bezze Customz',
@@ -792,27 +1278,62 @@ document.getElementById('share').addEventListener('click', async () => {
   if (result === 'manual') showCopyField(url);
 });
 
-canvas.on('object:modified', () => {
+canvas.on('object:modified', (event) => {
   document.getElementById('axis').classList.remove('show');
+  document.getElementById('axis-x').classList.remove('show');
+  if (event.target) touchObject(event.target);
+  checkSafe(event.target);
   commit();
 });
-canvas.on('text:changed', () => scheduleSync());
+canvas.on('text:changed', (event) => {
+  const field = document.getElementById('edit-text');
+  if (event.target && document.activeElement !== field) field.value = event.target.text || '';
+  scheduleSyncAndSafe(event.target);
+});
+canvas.on('text:editing:entered', () => {
+  const obj = active();
+  if (isText(obj)) showSelection(obj);
+});
+canvas.on('text:editing:exited', () => {
+  if (isText(active())) commit();
+});
+canvas.on('mouse:dblclick', (opt) => {
+  const obj = opt.target;
+  if (!isText(obj)) return;
+  showSelection(obj);
+  const coarse = window.matchMedia('(pointer: coarse)').matches;
+  const field = document.getElementById('edit-text');
+  if (coarse) {
+    if (obj.exitEditing) obj.exitEditing();
+    field.focus();
+    field.select();
+  } else if (!obj.isEditing && obj.enterEditing) {
+    obj.enterEditing();
+    if (obj.selectAll) obj.selectAll();
+  }
+});
 canvas.on('object:moving', (event) => {
   const obj = event.target;
   if (!obj) return;
   const center = obj.getCenterPoint();
   const axis = document.getElementById('axis');
-  if (Math.abs(center.x - CW / 2) < 18) {
-    obj.setPositionByOrigin(new fabric.Point(CW / 2, center.y), 'center', 'center');
-    axis.classList.add('show');
-  } else axis.classList.remove('show');
-  scheduleSync();
+  const axisX = document.getElementById('axis-x');
+  let x = center.x;
+  let y = center.y;
+  const snap = Math.abs(x - CW / 2) < 16;
+  const snapY = Math.abs(y - CH / 2) < 16;
+  if (snap) x = CW / 2;
+  if (snapY) y = CH / 2;
+  if (snap || snapY) obj.setPositionByOrigin(new fabric.Point(x, y), 'center', 'center');
+  axis.classList.toggle('show', snap);
+  axisX.classList.toggle('show', snapY);
+  scheduleSyncAndSafe(obj);
 });
-canvas.on('object:scaling', () => scheduleSync());
-canvas.on('object:rotating', () => scheduleSync());
-canvas.on('selection:created', syncFromSelection);
-canvas.on('selection:updated', syncFromSelection);
-canvas.on('selection:cleared', refreshLayers);
+canvas.on('object:scaling', (event) => scheduleSyncAndSafe(event.target));
+canvas.on('object:rotating', (event) => scheduleSyncAndSafe(event.target));
+canvas.on('selection:created', (event) => showSelection(event.selected?.[0] || active()));
+canvas.on('selection:updated', (event) => showSelection(event.selected?.[0] || active()));
+canvas.on('selection:cleared', () => { if (!lock) closeSheet(); });
 
 window.addEventListener('keydown', (event) => {
   const tag = document.activeElement && document.activeElement.tagName;
@@ -822,8 +1343,8 @@ window.addEventListener('keydown', (event) => {
     if (event.shiftKey) redo();
     else undo();
   }
-  const active = canvas.getActiveObject();
-  if ((event.key === 'Delete' || event.key === 'Backspace') && active && !active.isEditing) {
+  const obj = active();
+  if ((event.key === 'Delete' || event.key === 'Backspace') && obj && !obj.isEditing) {
     event.preventDefault();
     removeActive();
   }
@@ -859,11 +1380,10 @@ if (draft && draft.v === 1 && (draft.wrapKey || (draft.objects && draft.objects.
   updateHistory();
 } else {
   paintWrap(null);
+  seedMonogram();
   commit();
 }
 
 FONTS.forEach((font) => {
   document.fonts.load(`160px "${font.name}"`).catch(() => {});
 });
-
-document.getElementById('size-label').textContent = Math.round(Number(sizeInput.value) / PX) + ' mm';
