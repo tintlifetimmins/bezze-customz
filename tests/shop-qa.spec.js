@@ -189,9 +189,14 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
     await expect(font).toHaveAttribute('aria-pressed', 'true');
     await expect(font).toHaveText('Brittney Lee');
     const fitted = await read(page);
+    expect(fitted.text).toBe('Brittney Lee');
+    expect(fitted.lines).toBe(1);
     expect(fitted.controls).not.toContain('ml');
     expect(fitted.controls).toContain('mtr');
-    expect(fitted.textWidth).toBeLessThanOrEqual(fitted.safeWidth + 4);
+    expect(fitted.canvasBox.left).toBeGreaterThanOrEqual(-1);
+    expect(fitted.canvasBox.top).toBeGreaterThanOrEqual(-1);
+    expect(fitted.canvasBox.right).toBeLessThanOrEqual(fitted.canvasWidth + 1);
+    expect(fitted.canvasBox.bottom).toBeLessThanOrEqual(fitted.canvasHeight + 1);
     const swatch = page.locator('#ink-swatches button').nth(2);
     await press(swatch, testInfo);
     await expect(page.locator('#ink')).not.toHaveValue('#ffffff');

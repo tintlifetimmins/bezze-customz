@@ -49,8 +49,28 @@ fabric.NameText = fabric.util.createClass(fabric.IText, {
     return this.callSuper('toObject', ['data', 'curve'].concat(extra || []));
   },
   initDimensions() {
+    if (fabric.util.clearFabricFontCache && this.fontFamily) {
+      fabric.util.clearFabricFontCache(this.fontFamily);
+    }
+    this.objectCaching = false;
+    this.width = Math.max(this.width || 0, (this.fontSize || 200) * Math.max(1, Array.from(this.text || '').length));
     this.callSuper('initDimensions');
+    const text = this.text || '';
+    if (text && !text.includes('\n')) {
+      const ctx = fabric.util.createCanvasElement().getContext('2d');
+      ctx.font = this._getFontDeclaration();
+      const metrics = ctx.measureText(text);
+      const spacing = (this.charSpacing || 0) / 1000 * this.fontSize * Math.max(0, Array.from(text).length - 1);
+      const overhangLeft = Math.max(0, -(metrics.actualBoundingBoxLeft || 0));
+      const overhangRight = Math.max(0, (metrics.actualBoundingBoxRight || metrics.width) - metrics.width);
+      const measured = metrics.width + spacing + (this.strokeWidth || 0) + overhangLeft + overhangRight;
+      this.width = Math.max(this.width || 0, measured, this.fontSize * 0.35);
+      const ascent = metrics.actualBoundingBoxAscent || this.fontSize * 0.8;
+      const descent = metrics.actualBoundingBoxDescent || this.fontSize * 0.25;
+      this.height = Math.max(this.height || 0, ascent + descent + this.fontSize * 0.08, this.fontSize);
+    }
     if (this.curve) this.height += (Math.abs(this.curve) / 100) * this.fontSize * 0.9;
+    this.dirty = true;
   },
   _render(ctx) {
     if (!this.curve || this.isEditing) {
@@ -407,7 +427,7 @@ function fit() {
   fabric.Object.prototype.cornerSize = px(30);
   fabric.Object.prototype.touchCornerSize = px(56);
   fabric.Object.prototype.borderScaleFactor = px(2.6);
-  fabric.Object.prototype.padding = px(16);
+  fabric.Object.prototype.padding = px(4);
   fabric.Object.prototype.rotatingPointOffset = px(54);
   const mtrOwners = [fabric.Object, fabric.Text, fabric.IText, fabric.NameText];
   mtrOwners.forEach((klass) => {
@@ -465,15 +485,35 @@ function checkSafe(obj) {
 
 function containText(obj) {
   if (!isText(obj)) return;
-  const limit = CW - SAFE * 2;
+  obj.objectCaching = false;
   let guard = 0;
-  obj.initDimensions();
-  while (obj.getScaledWidth() > limit && obj.fontSize > 64 && guard < 40) {
-    obj.set('fontSize', Math.max(64, obj.fontSize - 8));
+  while (guard < 60) {
     obj.initDimensions();
+    obj.setCoords();
+    const box = obj.getBoundingRect(true, true);
+    const lines = obj.textLines ? obj.textLines.length : 1;
+    const inside = box.left >= -0.5 && box.top >= -0.5 && box.left + box.width <= CW + 0.5 && box.top + box.height <= CH + 0.5;
+    if (inside && lines <= 1) break;
+    if ((obj.fontSize || 200) > 48) obj.set('fontSize', Math.max(48, (obj.fontSize || 200) - 8));
+    else {
+      const next = Math.max(0.2, (obj.scaleX || 1) * 0.92);
+      obj.set({ scaleX: next, scaleY: next });
+      if (next <= 0.2) break;
+    }
     guard += 1;
   }
   obj.setCoords();
+  const box = obj.getBoundingRect(true, true);
+  let dx = 0;
+  let dy = 0;
+  if (box.left < 0) dx = -box.left;
+  if (box.top < 0) dy = -box.top;
+  if (box.left + box.width > CW) dx = CW - (box.left + box.width);
+  if (box.top + box.height > CH) dy = CH - (box.top + box.height);
+  if (dx || dy) obj.set({ left: (obj.left || 0) + dx, top: (obj.top || 0) + dy });
+  obj.initDimensions();
+  obj.setCoords();
+  obj.dirty = true;
   const size = document.getElementById('size');
   const label = document.getElementById('size-label');
   if (size && label && document.activeElement !== size) {
@@ -519,6 +559,7 @@ function makeName(meta) {
     top: meta.top || CH / 2,
     angle: meta.angle || 0,
     editable: !phoneEditing(),
+    objectCaching: false,
     data: { kind: 'text', ...(meta.data || {}) },
   });
   applyTextPaint(text, meta);
@@ -1062,8 +1103,13 @@ function paintSwatches(container, onPick) {
   });
 }
 
-async function ensureFont(name) {
-  try { await document.fonts.load(`200px "${name}"`); } catch { /* fallback */ }
+async function ensureFont(name, size = 200) {
+  const pxSize = Math.max(12, Math.round(size || 200));
+  try {
+    await document.fonts.load(`${pxSize}px "${name}"`);
+    await document.fonts.ready;
+  } catch { /* the canvas falls back if the face is blocked */ }
+  if (fabric.util.clearFabricFontCache) fabric.util.clearFabricFontCache(name);
 }
 
 async function addText() {
@@ -1334,6 +1380,7 @@ function rotateStep() {
   if (!obj || obj.data?.locked) return;
   obj.rotate((obj.angle || 0) + 15);
   obj.setCoords();
+  if (isText(obj)) containText(obj);
   canvas.requestRenderAll();
   commit();
 }
@@ -1511,7 +1558,7 @@ function bootDesigns() {
 function bootUi() {
   fontButtons(document.getElementById('sheet-fonts'), async (font) => {
     state.font = font.name;
-    await ensureFont(font.name);
+    await ensureFont(font.name, active()?.fontSize || 200);
     liveText((obj) => {
       obj.set('fontFamily', font.name);
       obj.initDimensions();
@@ -2123,7 +2170,19 @@ if (draft && draft.v === 1 && (draft.wrapKey || (draft.objects && draft.objects.
 }
 
 FONTS.forEach((font) => {
-  document.fonts.load(`160px "${font.name}"`).catch(() => {});
+  document.fonts.load(`160px "${font.name}"`).then(() => {
+    if (fabric.util.clearFabricFontCache) fabric.util.clearFabricFontCache(font.name);
+  }).catch(() => {});
+});
+document.fonts.addEventListener('loadingdone', () => {
+  canvas.getObjects().forEach((obj) => {
+    if (!isText(obj)) return;
+    if (fabric.util.clearFabricFontCache) fabric.util.clearFabricFontCache(obj.fontFamily);
+    obj.initDimensions();
+    containText(obj);
+  });
+  canvas.requestRenderAll();
+  scheduleSync();
 });
 
 if (desktopEditor()) {
@@ -2185,6 +2244,18 @@ window.__bezze = {
       scaleX: obj ? obj.scaleX || 1 : null,
       textWidth: obj && obj.getScaledWidth ? Math.round(obj.getScaledWidth()) : null,
       safeWidth: CW - SAFE * 2,
+      canvasWidth: CW,
+      canvasHeight: CH,
+      lines: obj && obj.textLines ? obj.textLines.length : 0,
+      canvasBox: obj ? (() => {
+        const boundBox = obj.getBoundingRect(true, true);
+        return {
+          left: boundBox.left,
+          top: boundBox.top,
+          right: boundBox.left + boundBox.width,
+          bottom: boundBox.top + boundBox.height,
+        };
+      })() : null,
       controls: obj ? Object.keys(obj.controls) : [],
       box,
       objects: canvas.getObjects().map((item) => ({
