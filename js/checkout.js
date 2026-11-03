@@ -65,10 +65,8 @@ function showBag(bag) {
   shot.alt = bag.title + ', watermarked preview';
   shot.draggable = false;
   shot.src = bag.thumb;
-  const note = document.getElementById('licensed-note');
   const pay = document.querySelector('#pay button[type="submit"]');
-  if (note) note.hidden = !bag.licensed;
-  if (pay) pay.disabled = !!bag.licensed;
+  if (pay) pay.disabled = false;
   setDelivery(delivery);
   show('bag');
 }
@@ -137,13 +135,6 @@ document.getElementById('pay').addEventListener('submit', (event) => {
   event.preventDefault();
   const bag = getBag();
   if (!bag) return;
-  if (bag.licensed) {
-    const note = document.getElementById('licensed-note');
-    if (note) note.hidden = false;
-    const pay = event.target.querySelector('button[type="submit"]');
-    if (pay) pay.disabled = true;
-    return;
-  }
   const name = document.getElementById('name').value.trim();
   const email = document.getElementById('email').value.trim();
   const phone = document.getElementById('phone').value.trim();
@@ -161,7 +152,6 @@ document.getElementById('pay').addEventListener('submit', (event) => {
     subtitle: bag.subtitle,
     design: bag.design || null,
     thumb: bag.thumb,
-    licensed: !!bag.licensed,
     delivery,
     qty,
     totals,

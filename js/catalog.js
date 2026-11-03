@@ -23,7 +23,6 @@ export function loadCatalog() {
       badge: design.badge || '',
       drop: dropId(design),
       ink: design.ink,
-      licensed: !!design.licensed,
     })),
   };
 }

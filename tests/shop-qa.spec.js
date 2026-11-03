@@ -111,7 +111,8 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
 
   await test.step('gallery search, filters, and a design', async () => {
     await page.waitForFunction(() => document.querySelectorAll('.card').length >= 20);
-    await expect(page.locator('.legal-note')).toContainText('not for sale');
+    await expect(page.locator('.test-banner')).toContainText('no payment is taken');
+    await expect(page.getByText(/not for sale|Test image/i)).toHaveCount(0);
     await expect.poll(async () => Number.parseInt(await page.locator('#count').innerText(), 10)).toBeGreaterThanOrEqual(20);
     const dropTitles = await page.evaluate(async () => {
       const response = await fetch(new URL('drops/manifest.json', location.href));
@@ -151,7 +152,18 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
     if (await page.locator('#panel-designs').getAttribute('data-open') !== 'true') {
       await press(page.locator('[data-panel="designs"]'), testInfo);
     }
-    await page.waitForFunction(() => document.querySelectorAll('.design-card').length >= 5);
+    const dropTitles = await page.evaluate(async () => {
+      const response = await fetch(new URL('drops/manifest.json', location.href));
+      const manifest = await response.json();
+      const items = Array.isArray(manifest) ? manifest : (manifest.items || []);
+      return items.filter((item) => item.release === 'instant').map((item) => item.title);
+    });
+    await expect.poll(async () => page.locator('.design-card').count()).toBeGreaterThanOrEqual(20 + dropTitles.length);
+    for (const title of dropTitles) {
+      const exact = new RegExp(`^${title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`);
+      await expect(page.locator('.design-card strong').filter({ hasText: exact })).toBeVisible();
+    }
+    await expect(page.getByText(/not for sale|Test image/i)).toHaveCount(0);
     const swap = page.locator('.design-card button', { hasText: 'Swap' }).nth(1);
     await swap.scrollIntoViewIfNeeded();
     await press(swap, testInfo);
@@ -281,7 +293,7 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
     }
     await press(page.locator('#graphics button').first(), testInfo);
     await expect.poll(async () => (await read(page)).kind).toBe('graphic');
-    await expect(page.locator('#panel-clip .legal-note, #sheet-graphic .legal-note').first()).toContainText('not for sale');
+    await expect(page.getByText(/not for sale|Test image|test images/i)).toHaveCount(0);
   });
 
   await test.step('photo upload', async () => {
