@@ -15,7 +15,7 @@
   <div class="sticky-top">
     <p class="test-banner">Test site · sample designs only · no payment is taken</p>
     <header class="site-header">
-      <a class="logo" href="index.html">Bezze <em>Customz</em></a>
+      <a class="logo" href="index.html">Bezze<em>Customz</em></a>
       <div class="header-actions">
         <a class="bag-link" href="checkout.html">Bag <span id="bag-count">(0)</span></a>
         <button class="icon-btn" id="menu-btn" type="button" aria-label="Menu" aria-expanded="false">
@@ -26,26 +26,36 @@
   </div>
   <noscript><p class="noscript">This test shop draws the sample designs in your browser and needs JavaScript.</p></noscript>
   <main class="wrap gallery-tools">
-    <label class="search">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <input id="q" type="search" placeholder="Search designs" autocomplete="off">
-    </label>
-    <div class="cats" id="cats" role="group" aria-label="Categories"></div>
-    <div class="filters">
-      <div class="chips" id="colours" role="group" aria-label="Colours"></div>
-      <label class="sort">
-        <span class="sr">Sort</span>
-        <select id="sort">
-          <option value="popular">Popular</option>
-          <option value="newest">Newest</option>
-          <option value="az">A–Z</option>
-        </select>
+    <div class="gallery-bar">
+      <label class="search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <input id="q" type="search" placeholder="Search designs" autocomplete="off" enterkeyhint="search">
       </label>
+      <button type="button" class="filter-btn" id="open-filters" aria-expanded="false" aria-controls="filter-sheet">Filters</button>
     </div>
     <p class="count-line" id="count">Sample designs</p>
     <p class="hint" id="empty" hidden>No sample designs match that search.</p>
     <div class="grid" id="grid"></div>
   </main>
+  <button type="button" class="sheet-scrim" id="filter-scrim" hidden aria-label="Close filters"></button>
+  <aside id="filter-sheet" class="filter-sheet" data-open="false" aria-label="Filters">
+    <div class="sheet-head">
+      <h2>Filters</h2>
+      <button type="button" id="close-filters">Close</button>
+    </div>
+    <p class="hint">Category</p>
+    <div class="chips" id="cats" role="group" aria-label="Categories"></div>
+    <p class="hint">Colour</p>
+    <div class="chips" id="colours" role="group" aria-label="Colours"></div>
+    <label class="field">Sort
+      <select id="sort">
+        <option value="popular">Popular</option>
+        <option value="newest">Newest</option>
+        <option value="az">A–Z</option>
+      </select>
+    </label>
+    <button class="btn primary wide" type="button" id="apply-filters">Show designs</button>
+  </aside>
   <footer class="site-foot">Prices in CAD · Sample artwork only · Bezze Customz</footer>
   <script type="module" src="js/gallery.js"></script>
 </body>

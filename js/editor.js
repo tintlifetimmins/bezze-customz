@@ -2,7 +2,6 @@ import { CLIPS, CLIP_CATEGORIES } from './clipart.js';
 import { drawWrap, getDesign } from './designs.js';
 import { filterCatalog, loadCatalog } from './catalog.js';
 import { paintProductShot } from './thumbs.js';
-import { TumblerViewer } from './tumbler.js';
 import { PRICE, clearDraft, loadDraft, money, saveDraft, setBag } from './store.js';
 import { initNav } from './nav.js';
 import { shareDesign, showCopyField, toast } from './share.js';
@@ -1344,7 +1343,7 @@ function showStage(mode) {
   document.getElementById('view-flat').setAttribute('aria-pressed', flat ? 'true' : 'false');
   document.getElementById('view-3d').setAttribute('aria-pressed', flat ? 'false' : 'true');
   document.getElementById('fit-view').hidden = !flat;
-  if (!flat && viewer) requestAnimationFrame(() => viewer.resize());
+  if (!flat) ensureViewer().then((ready) => ready && ready.resize());
 }
 document.getElementById('view-flat').addEventListener('click', () => showStage('flat'));
 document.getElementById('view-3d').addEventListener('click', () => showStage('3d'));
@@ -1551,16 +1550,26 @@ setInterval(() => {
   else el.textContent = `Drag to rotate · saved ${Math.floor(seconds / 60)}m ago`;
 }, 4000);
 
-try {
-  const view = document.getElementById('view3d');
-  const stage = document.getElementById('view-stage');
-  viewer = new TumblerViewer(view, { spin: false, distance: 58, exposure: 1.05 });
-  new ResizeObserver(() => viewer.resize()).observe(stage);
-  requestAnimationFrame(() => viewer.resize());
-} catch (err) {
-  console.error(err);
-  document.getElementById('view3d').hidden = true;
-  document.getElementById('view-fallback').hidden = false;
+let viewerPromise = null;
+function ensureViewer() {
+  if (viewer) return Promise.resolve(viewer);
+  if (!viewerPromise) {
+    viewerPromise = import('./tumbler.js').then(({ TumblerViewer }) => {
+      const view = document.getElementById('view3d');
+      const stage = document.getElementById('view-stage');
+      viewer = new TumblerViewer(view, { spin: false, distance: 58, exposure: 1.05 });
+      new ResizeObserver(() => viewer.resize()).observe(stage);
+      viewer.resize();
+      scheduleSync();
+      return viewer;
+    }).catch((err) => {
+      console.error(err);
+      document.getElementById('view3d').hidden = true;
+      document.getElementById('view-fallback').hidden = false;
+      return null;
+    });
+  }
+  return viewerPromise;
 }
 
 const draft = loadDraft(currentId());

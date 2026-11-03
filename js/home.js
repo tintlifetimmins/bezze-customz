@@ -1,7 +1,6 @@
 import { DESIGNS, drawDesign } from './designs.js';
 import { mountCards } from './cards.js';
 import { paintProductShot } from './thumbs.js';
-import { TumblerViewer } from './tumbler.js';
 import { nextTuesdayEight, remaining } from './time.js';
 import { initNav } from './nav.js';
 
@@ -35,16 +34,22 @@ document.fonts.ready.then(paintDrops);
 
 async function buildHeroWrap() {
   const canvas = document.createElement('canvas');
-  canvas.width = 1008;
-  canvas.height = 868;
+  canvas.width = 630;
+  canvas.height = 543;
   const ctx = canvas.getContext('2d');
   drawDesign('rose-noir', ctx, canvas.width, canvas.height);
   try {
-    await document.fonts.load('118px "Great Vibes"');
+    await document.fonts.load('96px "Great Vibes"');
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = '118px "Great Vibes", cursive';
+    let size = 96;
+    const limit = canvas.width * 0.34;
+    ctx.font = size + 'px "Great Vibes", cursive';
+    while (size > 52 && ctx.measureText('Kayla').width > limit) {
+      size -= 4;
+      ctx.font = size + 'px "Great Vibes", cursive';
+    }
     ctx.shadowColor = 'rgba(0,0,0,.35)';
     ctx.shadowBlur = 14;
     ctx.shadowOffsetY = 5;
@@ -59,22 +64,28 @@ async function startHero() {
   const stage = document.getElementById('hero-stage');
   const view = document.getElementById('hero-view');
   const wrap = await buildHeroWrap();
-  try {
-    const viewer = new TumblerViewer(view, { spin: true, distance: 76, exposure: 1.05 });
-    new ResizeObserver(() => viewer.resize()).observe(stage);
-    viewer.setWrap(wrap);
-    requestAnimationFrame(() => {
-      viewer.resize();
-      stage.dataset.ready = 'true';
-    });
-  } catch (err) {
-    console.error(err);
-    const img = new Image();
-    img.src = paintProductShot(wrap).toDataURL('image/jpeg', 0.9);
-    img.alt = 'Sample 20 oz tumbler';
-    view.replaceWith(img);
-    stage.dataset.ready = 'true';
-  }
+  const still = new Image();
+  still.src = paintProductShot(wrap, 280).toDataURL('image/jpeg', 0.72);
+  still.alt = 'Sample 20 oz tumbler';
+  still.className = 'hero-still';
+  view.before(still);
+  stage.dataset.ready = 'true';
+  const boot = async () => {
+    try {
+      const { TumblerViewer } = await import('./tumbler.js');
+      const viewer = new TumblerViewer(view, { spin: true, distance: 76, exposure: 1.05 });
+      new ResizeObserver(() => viewer.resize()).observe(stage);
+      viewer.setWrap(wrap);
+      requestAnimationFrame(() => {
+        viewer.resize();
+        still.remove();
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  };
+  if ('requestIdleCallback' in window) requestIdleCallback(() => boot(), { timeout: 1600 });
+  else setTimeout(boot, 700);
 }
 
 startHero();

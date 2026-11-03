@@ -26,8 +26,33 @@ export function refreshBagCount() {
   slot.textContent = '(' + (bag?.qty || 0) + ')';
 }
 
+function mountAppNav() {
+  if (document.body.classList.contains('editor-app') || document.querySelector('.app-nav')) return;
+  const nav = document.createElement('nav');
+  nav.className = 'app-nav';
+  nav.setAttribute('aria-label', 'Shop');
+  const file = currentFile();
+  const bag = getBag();
+  const items = [
+    ['Home', 'index.html', 'index.html'],
+    ['Gallery', 'gallery.html', 'gallery.html'],
+    ['Design', 'editor.html?mode=custom', 'editor.html'],
+    [`Bag${bag?.qty ? ' ' + bag.qty : ''}`, 'checkout.html', 'checkout.html'],
+  ];
+  for (const [label, href, match] of items) {
+    const link = document.createElement('a');
+    link.href = href;
+    link.textContent = label;
+    if (file === match) link.setAttribute('aria-current', 'page');
+    nav.append(link);
+  }
+  document.body.append(nav);
+  document.body.classList.add('has-app-nav');
+}
+
 export function initNav() {
   refreshBagCount();
+  mountAppNav();
   const btn = document.getElementById('menu-btn');
   if (!btn || document.getElementById('drawer')) {
     if (!btn) return;

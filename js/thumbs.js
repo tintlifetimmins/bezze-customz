@@ -9,13 +9,15 @@ function roundRect(g, x, y, w, h, r) {
   g.closePath();
 }
 
-export function paintProductShot(wrap) {
+export function paintProductShot(wrap, maxW = 420) {
   const W = 420;
   const H = 640;
+  const scale = Math.min(1, maxW / W);
   const canvas = document.createElement('canvas');
-  canvas.width = W;
-  canvas.height = H;
+  canvas.width = Math.max(1, Math.round(W * scale));
+  canvas.height = Math.max(1, Math.round(H * scale));
   const g = canvas.getContext('2d');
+  g.scale(scale, scale);
   const cx = W / 2;
   const topRx = 70;
   const botRx = 62;

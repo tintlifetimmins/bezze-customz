@@ -6,10 +6,10 @@ export function mountCards(designs, container) {
   const frag = document.createDocumentFragment();
   for (const design of designs) {
     const wrap = document.createElement('canvas');
-    wrap.width = 492;
-    wrap.height = 422;
+    wrap.width = 246;
+    wrap.height = 211;
     drawDesign(design.id, wrap.getContext('2d'), wrap.width, wrap.height);
-    const shot = paintProductShot(wrap);
+    const shot = paintProductShot(wrap, 200);
     const link = document.createElement('a');
     link.className = 'card';
     link.href = `editor.html?design=${encodeURIComponent(design.id)}`;
@@ -17,8 +17,10 @@ export function mountCards(designs, container) {
     const thumb = document.createElement('div');
     thumb.className = 'thumb';
     const img = new Image();
-    img.src = shot.toDataURL('image/jpeg', 0.86);
+    img.src = shot.toDataURL('image/jpeg', 0.7);
     img.alt = '';
+    img.decoding = 'async';
+    img.loading = 'lazy';
     thumb.append(img);
     if (design.badge) {
       const badge = document.createElement('span');

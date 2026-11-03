@@ -68,6 +68,20 @@ function writeQuery() {
   history.replaceState(null, '', url);
 }
 
+const sheet = document.getElementById('filter-sheet');
+const openBtn = document.getElementById('open-filters');
+const scrim = document.getElementById('filter-scrim');
+function setFilters(open) {
+  sheet.dataset.open = open ? 'true' : 'false';
+  openBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (scrim) scrim.hidden = !open;
+  document.body.classList.toggle('nav-open', open);
+}
+openBtn.addEventListener('click', () => setFilters(sheet.dataset.open !== 'true'));
+document.getElementById('close-filters').addEventListener('click', () => setFilters(false));
+document.getElementById('apply-filters').addEventListener('click', () => setFilters(false));
+scrim?.addEventListener('click', () => setFilters(false));
+
 function render() {
   for (const button of cats.querySelectorAll('button')) {
     button.setAttribute('aria-pressed', button.dataset.cat === state.cat ? 'true' : 'false');
@@ -79,6 +93,13 @@ function render() {
   count.textContent = list.length + (list.length === 1 ? ' design' : ' designs');
   empty.hidden = list.length > 0;
   mountCards(list, grid);
+  const bits = [];
+  if (state.cat !== 'All') bits.push(state.cat);
+  const colour = COLOUR_CHIPS.find((chip) => chip.id === state.colour);
+  if (colour && state.colour !== 'all') bits.push(colour.label);
+  if (state.sort === 'newest') bits.push('Newest');
+  if (state.sort === 'az') bits.push('A–Z');
+  openBtn.textContent = bits.length ? `Filters · ${bits.join(', ')}` : 'Filters';
   writeQuery();
 }
 

@@ -26,7 +26,7 @@
     <section id="empty">
       <h2 class="section-title">Your bag is empty</h2>
       <p class="lede">Pick a sample design, add a name, then come back here.</p>
-      <a class="btn primary" href="gallery.html">Shop the collection</a>
+      <a class="btn primary wide" href="gallery.html">Shop the collection</a>
     </section>
     <section id="bag-view" hidden>
       <article class="line">
@@ -50,15 +50,15 @@
       <div class="totals" id="totals"></div>
       <form id="pay" novalidate>
         <label class="field">Name
-          <input id="name" name="name" autocomplete="name" required>
+          <input id="name" name="name" type="text" autocomplete="name" autocapitalize="words" enterkeyhint="next" required>
           <p class="err" id="name-error"></p>
         </label>
         <label class="field">Email
-          <input id="email" name="email" type="email" autocomplete="email" required>
+          <input id="email" name="email" type="email" inputmode="email" autocomplete="email" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="next" required>
           <p class="err" id="email-error"></p>
         </label>
         <label class="field">Phone
-          <input id="phone" name="tel" type="tel" autocomplete="tel" placeholder="705-555-0100" required>
+          <input id="phone" name="tel" type="tel" inputmode="tel" autocomplete="tel" enterkeyhint="done" placeholder="705-555-0100" required>
           <p class="err" id="phone-error"></p>
         </label>
         <button class="btn primary wide" type="submit">Checkout (test mode — no payment)</button>
