@@ -155,39 +155,12 @@
         <div class="layers" id="layers" aria-label="Layers"></div>
         <button class="btn ghost wide" type="button" id="reset">Start over</button>
       </section>
-      <nav class="tabbar" aria-label="Tools">
-        <button type="button" data-panel="designs">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-          Designs
-        </button>
-        <button type="button" data-panel="text">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M12 6v12M8 18h8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-          Text
-        </button>
-        <button type="button" data-panel="mono">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 15V9h3.2a2.2 2.2 0 0 1 0 4.4H9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-          Monogram
-        </button>
-        <button type="button" data-panel="clip">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2 6h6l-5 4 2 6-5-3-5 3 2-6-5-4h6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
-          Clip art
-        </button>
-        <button type="button" data-panel="photo">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="10" r="1.4" fill="currentColor"/><path d="M4 16l4.5-4 3 3L16 11l4 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-          Photo
-        </button>
-        <button type="button" data-panel="layers">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l8 4-8 4-8-4zM4 12l8 4 8-4M4 16l8 4 8-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
-          Layers
-        </button>
-      </nav>
-    </div>
-  </main>
   <aside id="sheet" class="edit-sheet" data-open="false" data-kind="" aria-label="Edit selection">
     <div class="sheet-head">
       <h2 id="sheet-title">Edit text</h2>
       <button type="button" id="sheet-close" aria-label="Close editor">Close</button>
     </div>
+    <div class="sheet-body">
     <div id="type-dock" class="type-dock" hidden>
       <input id="edit-text" class="type-input" type="text" autocomplete="off" autocapitalize="words" enterkeyhint="done" aria-label="Edit text">
       <input id="mono-letters" class="type-input" type="text" maxlength="3" autocapitalize="characters" autocomplete="off" enterkeyhint="done" aria-label="Monogram initials" hidden>
@@ -260,7 +233,36 @@
       <button type="button" id="lock">Lock</button>
       <button type="button" id="delete">Delete</button>
     </div>
+    </div>
   </aside>
+      <nav class="tabbar" aria-label="Tools">
+        <button type="button" data-panel="designs">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          Designs
+        </button>
+        <button type="button" data-panel="text">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M12 6v12M8 18h8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+          Text
+        </button>
+        <button type="button" data-panel="mono">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M9 15V9h3.2a2.2 2.2 0 0 1 0 4.4H9" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          Monogram
+        </button>
+        <button type="button" data-panel="clip">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2 6h6l-5 4 2 6-5-3-5 3 2-6-5-4h6z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          Clip art
+        </button>
+        <button type="button" data-panel="photo">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="9" cy="10" r="1.4" fill="currentColor"/><path d="M4 16l4.5-4 3 3L16 11l4 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          Photo
+        </button>
+        <button type="button" data-panel="layers">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l8 4-8 4-8-4zM4 12l8 4 8-4M4 16l8 4 8-4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+          Layers
+        </button>
+      </nav>
+    </div>
+  </main>
   <script src="https://cdn.jsdelivr.net/npm/fabric@5.3.0/dist/fabric.min.js"></script>
   <script type="module" src="js/editor.js"></script>
 </body>

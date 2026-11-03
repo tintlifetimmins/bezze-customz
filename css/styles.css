@@ -954,13 +954,27 @@ body.editor-app .panel {
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
   min-height: 0;
+  scroll-padding-top: 56px;
+  justify-content: flex-start;
+  align-items: stretch;
 }
 body.editor-app .sheet-head {
-  position: sticky;
-  top: 0;
+  position: relative;
   z-index: 2;
+  flex: none;
   background: #121214;
-  padding-top: 4px;
+  padding: 8px 0 6px;
+  margin: 0;
+}
+body.editor-app .sheet-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  scroll-padding-top: 12px;
 }
 body.editor-app .panel {
   position: fixed;
@@ -1000,6 +1014,13 @@ body.editor-app .shape { min-height: 86px; }
 body.editor-app .shape svg { width: 40px; height: 40px; }
 body.editor-app .chips button { min-height: 44px; }
 body.editor-app .edit-sheet { bottom: 76px; z-index: 36; max-height: min(50vh, 440px); }
+body.editor-app .edit-sheet[data-open="true"] {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+  overflow: hidden;
+}
 body.editor-app.typing {
   position: fixed;
   left: var(--vv-left, 0px);
@@ -1229,6 +1250,9 @@ body.editor-app .btn.wide { min-height: 52px; }
     min-height: 0;
     height: 100%;
     overflow: hidden;
+    position: relative;
+    top: 0;
+    align-self: stretch;
     border-right: 1px solid var(--line);
     background: #0c0c0e;
   }
@@ -1273,6 +1297,7 @@ body.editor-app .btn.wide { min-height: 52px; }
   }
   body.editor-app .tabbar {
     position: static;
+    z-index: auto;
     height: auto;
     display: flex;
     flex-direction: column;
@@ -1296,6 +1321,7 @@ body.editor-app .btn.wide { min-height: 52px; }
   body.editor-app .panel .chips { flex-wrap: wrap; overflow: visible; }
   body.editor-app .panel {
     position: static;
+    z-index: auto;
     transform: none;
     max-height: none;
     flex: 1;
@@ -1311,6 +1337,8 @@ body.editor-app .btn.wide { min-height: 52px; }
     display: block;
     visibility: visible;
     transform: none;
+    overflow-y: auto;
+    scroll-padding-top: 12px;
   }
   body.editor-app .art-zoom { inset: 28px 32px 36px; }
   body.editor-app .art-frame { width: min(100%, 620px); }
@@ -1319,16 +1347,21 @@ body.editor-app .btn.wide { min-height: 52px; }
   body.editor-app .edit-sheet {
     position: absolute;
     left: 0;
+    right: 0;
     top: 0;
     bottom: 0;
-    width: 300px;
-    right: auto;
+    width: auto;
     max-height: none;
+    height: auto;
     transform: none;
     border-radius: 0;
-    border-right: 1px solid var(--line);
+    border-right: 0;
     z-index: 8;
     margin: 0;
+    justify-content: flex-start;
+    align-items: stretch;
+    align-content: flex-start;
+    overflow: hidden;
   }
   body.editor-app .edit-sheet:not([data-open="true"]) { display: none; }
   body.editor-app .edit-sheet[data-open="true"] {
@@ -1336,9 +1369,8 @@ body.editor-app .btn.wide { min-height: 52px; }
     flex-direction: column;
     visibility: visible;
     transform: none;
-    overflow-y: auto;
+    overflow: hidden;
     min-height: 0;
-    max-height: 100%;
   }
   body.editor-app .btn.review { display: none; }
   body.editor-app.typing {

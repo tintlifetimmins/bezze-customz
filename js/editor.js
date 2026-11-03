@@ -778,6 +778,9 @@ function showSelection(obj) {
   const kind = obj.data?.kind === 'monogram' ? 'monogram' : isText(obj) ? 'text' : obj.data?.kind === 'clip' ? 'clip' : obj.data?.kind === 'graphic' ? 'graphic' : obj.data?.kind === 'design' ? 'design' : 'object';
   sheet.dataset.open = 'true';
   sheet.dataset.kind = kind;
+  sheet.scrollTop = 0;
+  const sheetBody = sheet.querySelector('.sheet-body');
+  if (sheetBody) sheetBody.scrollTop = 0;
   document.body.classList.add('sheet-open');
   document.getElementById('sheet-text').hidden = kind !== 'text';
   document.getElementById('sheet-mono').hidden = kind !== 'monogram';
@@ -1689,6 +1692,7 @@ document.querySelectorAll('.tabbar button').forEach((button) => {
     document.querySelectorAll('.tabbar button').forEach((tab) => tab.setAttribute('aria-current', 'false'));
     if (!open) {
       panel.dataset.open = 'true';
+      panel.scrollTop = 0;
       button.setAttribute('aria-current', 'true');
       closeSheet();
     }
