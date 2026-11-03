@@ -447,11 +447,16 @@ a { color: inherit; }
 
 .panel { margin-top: 16px; }
 .panel h2 { font-size: 14px; margin: 0 0 8px; font-weight: 600; }
-.font-row, .style-row, .layers, .swatches, .shapes {
+.font-row, .layers, .swatches {
   display: flex;
   gap: 8px;
   overflow-x: auto;
   scrollbar-width: none;
+  padding-bottom: 4px;
+}
+.style-row, .shapes {
+  display: flex;
+  gap: 8px;
   padding-bottom: 4px;
 }
 .font-chip, .style-row button, .shape, .swatch, .layer, .text-btn, .actions button {
@@ -460,10 +465,17 @@ a { color: inherit; }
   color: white;
 }
 .font-chip {
-  min-width: 96px;
-  height: 68px;
+  min-width: 0;
+  width: 100%;
+  min-height: 48px;
+  height: auto;
   border-radius: 14px;
   font-size: 22px;
+  padding: 8px 14px;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .font-chip[aria-pressed="true"], .style-row button[aria-pressed="true"] {
   border-color: var(--fuchsia);
@@ -907,7 +919,27 @@ body.editor-app .fit-view {
   color: white;
   z-index: 3;
 }
-body.editor-app .editor-side { display: contents; }
+body.editor-app .font-row {
+  flex-direction: column;
+  align-items: stretch;
+  overflow: visible;
+}
+body.editor-app .edit-sheet,
+body.editor-app .panel {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  min-height: 0;
+}
+body.editor-app .sheet-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #121214;
+  padding-top: 4px;
+}
 body.editor-app .panel {
   position: fixed;
   left: 0;
@@ -1281,6 +1313,9 @@ body.editor-app .btn.wide { min-height: 52px; }
     flex-direction: column;
     visibility: visible;
     transform: none;
+    overflow-y: auto;
+    min-height: 0;
+    max-height: 100%;
   }
   body.editor-app .btn.review { display: none; }
   body.editor-app.typing {

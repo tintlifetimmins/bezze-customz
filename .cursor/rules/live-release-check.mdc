@@ -1,0 +1,8 @@
+---
+description: After every deploy, release-check the live Bezze shop at phone and desktop sizes
+alwaysApply: true
+---
+
+After every deploy of this shop, run a release check on the live site https://tintlifetimmins.github.io/bezze-customz/ before calling the work ready or fixed.
+
+Check both 390×844 and 1440×900. At each size, open every page (home, gallery, editor, checkout) and run the full editor flow: pick a gallery image, add clip art, add a name, change the font, confirm the 3D preview updates, and start checkout. Capture console errors. Report pass or fail for each step at both sizes, and save screenshots from both sizes as artifacts. If any step fails, say so and do not describe the release as ready.

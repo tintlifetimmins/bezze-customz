@@ -827,6 +827,7 @@ function fillTextSheet(obj) {
     button.setAttribute('aria-pressed', button.dataset.align === (obj.data?.align || 'center') ? 'true' : 'false');
   });
   filling = false;
+  refreshFontPreviews();
 }
 
 function fillMonoSheet(obj) {
@@ -841,6 +842,7 @@ function fillMonoSheet(obj) {
   document.getElementById('mono-ink').value = toHex(obj.data.fill || '#fff4e6');
   highlightFonts(obj.data.fontFamily, '#mono-fonts');
   filling = false;
+  refreshFontPreviews();
 }
 
 function press(name, on) {
@@ -854,15 +856,30 @@ function highlightFonts(name, root = '#sheet-fonts') {
   });
 }
 
-function paintSwatches(container, onPick) {
-  INKS.forEach((color) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'swatch';
-    button.style.background = color;
-    button.setAttribute('aria-label', color);
-    button.addEventListener('click', () => onPick(color));
-    container.append(button);
+function fontPreviewText(kind) {
+  if (kind === 'mono') {
+    const letters = (document.getElementById('mono-letters').value || '').trim();
+    return letters;
+  }
+  const typed = (document.getElementById('edit-text').value || '').replace(/\s+/g, ' ').trim();
+  if (typed) return typed;
+  const obj = active();
+  if (isText(obj) && (obj.text || '').trim()) return obj.text.trim();
+  return '';
+}
+
+function refreshFontPreviews() {
+  const nameText = fontPreviewText('text');
+  const monoText = fontPreviewText('mono');
+  document.querySelectorAll('#sheet-fonts .font-chip').forEach((button) => {
+    const label = nameText || button.dataset.font;
+    button.textContent = label;
+    button.title = label;
+  });
+  document.querySelectorAll('#mono-fonts .font-chip').forEach((button) => {
+    const label = monoText || button.dataset.font;
+    button.textContent = label;
+    button.title = label;
   });
 }
 
@@ -873,8 +890,22 @@ function fontButtons(container, onPick) {
     button.className = 'font-chip';
     button.dataset.font = font.name;
     button.style.fontFamily = font.css;
-    button.textContent = font.sample;
+    button.textContent = font.name;
+    button.title = font.name;
     button.addEventListener('click', () => onPick(font));
+    container.append(button);
+  });
+  refreshFontPreviews();
+}
+
+function paintSwatches(container, onPick) {
+  INKS.forEach((color) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'swatch';
+    button.style.background = color;
+    button.setAttribute('aria-label', color);
+    button.addEventListener('click', () => onPick(color));
     container.append(button);
   });
 }
@@ -1414,6 +1445,7 @@ document.getElementById('edit-text').addEventListener('input', () => {
     obj.set('text', document.getElementById('edit-text').value);
     obj.initDimensions();
   });
+  refreshFontPreviews();
   if (typing) requestAnimationFrame(revealActive);
 });
 document.getElementById('edit-text').addEventListener('change', () => {
@@ -1524,6 +1556,7 @@ document.getElementById('align-row').addEventListener('click', (event) => {
 document.getElementById('mono-letters').addEventListener('input', () => {
   const letters = cleanInitials(document.getElementById('mono-letters').value);
   updateMonogram({ initials: letters || 'A' });
+  refreshFontPreviews();
 });
 document.getElementById('mono-letters').addEventListener('change', () => {
   if (active()?.data?.kind === 'monogram') commit();
