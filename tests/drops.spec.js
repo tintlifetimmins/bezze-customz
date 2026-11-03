@@ -50,6 +50,9 @@ test('instant designs publish immediately and the next drop stays hidden', () =>
   expect(isPublicDrop(shown, now)).toBe(true);
   const published = publishDrops([hidden, shown], now);
   expect(published.map((item) => item.name)).toEqual(['Instant Pine']);
+  const licensed = publishDrops([{ ...shown, drive_file_id: 'lic-1', title: 'Licensed Hero', licensed: true }], now);
+  expect(licensed[0].licensed).toBe(true);
+  expect(licensed[0].badge).toBe('Test image, not for sale');
   const wrapped = publishDrops({ last_synced: '2026-11-04T15:00:00.000Z', items: [hidden, shown] }, now);
   expect(wrapped.map((item) => item.name)).toEqual(['Instant Pine']);
   expect(manifestItems({ last_synced: '2026-11-04T15:00:00.000Z', items: [shown] })).toEqual([shown]);
@@ -59,7 +62,7 @@ test('instant designs publish immediately and the next drop stays hidden', () =>
   expect(publishDrops({}, now)).toEqual([]);
 });
 
-test('an empty drop feed keeps the sample gallery', async ({ page }) => {
+test('an empty drop feed keeps the sample gallery', async ({ page }, testInfo) => {
   await page.goto('gallery.html');
   await page.waitForFunction(() => document.querySelectorAll('.card').length >= 20);
   const manifest = await page.evaluate(async () => {
@@ -67,6 +70,11 @@ test('an empty drop feed keeps the sample gallery', async ({ page }) => {
     return response.json();
   });
   expect(Array.isArray(manifestItems(manifest))).toBe(true);
+  if (testInfo.project.name === 'phone' || testInfo.project.name === 'desktop') {
+    const { mkdirSync } = await import('node:fs');
+    mkdirSync('test-results', { recursive: true });
+    await page.screenshot({ path: `test-results/gallery-${testInfo.project.use.viewport.width}.png`, fullPage: true });
+  }
 });
 
 test('instant feed items show in the gallery and editor, next drop does not', async ({ page }) => {
@@ -123,4 +131,45 @@ test('instant feed items show in the gallery and editor, next drop does not', as
   }
   await expect(page.locator('.design-card', { hasText: 'Instant Pine' })).toBeVisible();
   await expect(page.locator('.design-card', { hasText: 'Secret Drop' })).toHaveCount(0);
+});
+
+test('a licensed drop can be browsed but not checked out', async ({ page }) => {
+  const manifest = {
+    last_synced: new Date().toISOString(),
+    items: [{
+      drive_file_id: 'licensed-hero',
+      filename: 'licensed-hero.jpg',
+      title: 'Licensed Hero',
+      tags: ['character'],
+      release: 'instant',
+      licensed: true,
+      added_at: new Date().toISOString(),
+      width: 800,
+      height: 800,
+      preview: 'previews/licensed-hero.jpg',
+    }],
+  };
+  await page.route('**/drops/manifest.json', (route) => route.fulfill({
+    status: 200,
+    contentType: 'application/json',
+    body: JSON.stringify(manifest),
+  }));
+  await page.route('**/drops/previews/**', (route) => route.fulfill({
+    status: 200,
+    contentType: 'image/jpeg',
+    body: JPEG,
+  }));
+  await page.goto('gallery.html?licensed=1');
+  await expect(page.getByRole('heading', { name: 'Licensed Hero' })).toBeVisible();
+  await expect(page.getByText('Test image, not for sale').first()).toBeVisible();
+  await page.getByRole('link', { name: /Licensed Hero/ }).click();
+  await page.waitForSelector('.upper-canvas', { timeout: 15000 });
+  await expect(page.locator('#licensed-note')).toBeVisible();
+  const buy = page.locator('#add-cart');
+  if (await buy.isVisible()) await buy.click();
+  else await page.locator('#review').click();
+  await expect(page).toHaveURL(/checkout\.html/);
+  await expect(page.locator('#licensed-note')).toBeVisible();
+  await expect(page.locator('#pay button[type="submit"]')).toBeDisabled();
+  await expect(page.locator('#done')).toBeHidden();
 });

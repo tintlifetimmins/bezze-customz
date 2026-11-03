@@ -268,6 +268,7 @@ function paintWrap(key) {
     scheduleSync();
   });
   markActiveDesign();
+  refreshLicensedNote();
   if (!gradient && paintId !== 'custom' && !designReady(paintId)) {
     whenDesignReady(paintId).then(() => {
       const current = state.wrapKey || baseDesign?.id || 'custom';
@@ -1580,18 +1581,35 @@ function reviewThumb() {
   return paintProductShot(preview, 420).toDataURL('image/jpeg', 0.72);
 }
 
+function usesLicensedArt() {
+  if (baseDesign?.licensed) return true;
+  return canvas.getObjects().some((obj) => {
+    if (obj.data?.licensed) return true;
+    return !!(obj.data?.kind === 'design' && obj.data.designId && getDesign(obj.data.designId)?.licensed);
+  });
+}
+
+function refreshLicensedNote() {
+  const note = document.getElementById('licensed-note');
+  if (note) note.hidden = !usesLicensedArt();
+}
+
 function review() {
+  const licensed = usesLicensedArt();
+  refreshLicensedNote();
+  if (licensed) toast('This is a test image and isn’t for sale. Pick another design to check out.');
   const thumb = reviewThumb();
   setBag({
     v: 2,
-    designId: currentId(),
+    designId: baseDesign?.id || currentId(),
     title: productTitle(),
-    subtitle: `20 oz · ${design?.name || 'Custom wrap'} · Full wrap`,
+    subtitle: `20 oz · ${baseDesign?.name || design?.name || 'Custom wrap'} · Full wrap`,
     unitPrice: updatePrice(),
     qty: 1,
     customized: isCustom(),
     design: designRecord(),
     thumb,
+    licensed,
     delivery: 'pickup',
     savedAt: Date.now(),
   });
@@ -1605,6 +1623,7 @@ function swapDesign(id) {
   if (id !== 'monogram') bareMonogram = false;
   state.wrapKey = null;
   paintWrap(null);
+  refreshLicensedNote();
   commit();
   renderDesignLists();
 }
@@ -1618,7 +1637,7 @@ function addDesignLayer(id) {
     originY: 'center',
     left: CW / 2,
     top: CH / 2,
-    data: { kind: 'design', designId: id, name: picked.name },
+    data: { kind: 'design', designId: id, name: picked.name, licensed: !!picked.licensed },
   });
   img.scaleToWidth(CW * 0.7);
   const objects = canvas.getObjects();
@@ -1666,7 +1685,14 @@ function designCard(item) {
   add.textContent = 'Add';
   add.addEventListener('click', () => addDesignLayer(item.id));
   actions.append(swap, add);
-  copy.append(title, meta, actions);
+  copy.append(title, meta);
+  if (item.licensed) {
+    const note = document.createElement('p');
+    note.className = 'legal-note';
+    note.textContent = 'Test image, not for sale.';
+    copy.append(note);
+  }
+  copy.append(actions);
   card.append(img, copy);
   return card;
 }
@@ -1723,6 +1749,14 @@ function bootDesigns() {
   loadDropFeed().then((rows) => {
     if (!rows.length) return;
     installDropDesigns(rows);
+    const wanted = new URLSearchParams(location.search).get('design');
+    const picked = wanted ? getDesign(wanted) : null;
+    if (picked?.feed && baseDesign?.id !== picked.id) {
+      baseDesign = picked;
+      bareMonogram = false;
+      state.wrapKey = null;
+      paintWrap(null);
+    }
     catalog = loadCatalog();
     const known = new Set([...cats.querySelectorAll('button')].map((button) => button.dataset.cat));
     for (const name of catalog.categories) {

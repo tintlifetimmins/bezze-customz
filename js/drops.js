@@ -109,7 +109,10 @@ export function toDropDesign(item, now = new Date(), config = DROP_RELEASE) {
     feed: true,
     release: item.release,
     added_at: item.added_at,
-    badge: isCurrent ? 'This week' : (item.release === 'instant' ? 'New' : ''),
+    licensed: item.licensed === true,
+    badge: item.licensed === true
+      ? 'Test image, not for sale'
+      : (isCurrent ? 'This week' : (item.release === 'instant' ? 'New' : '')),
   };
 }
 
