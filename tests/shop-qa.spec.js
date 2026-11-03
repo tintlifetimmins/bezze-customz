@@ -97,6 +97,16 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
     await editorReady(page);
     await press(page.getByRole('link', { name: 'Close' }), testInfo);
     await expect(page).toHaveURL(/gallery\.html/);
+    const shop = mobile ? page.locator('.app-nav') : page.locator('.top-links');
+    await press(shop.getByRole('link', { name: 'Design' }), testInfo);
+    await expect(page).toHaveURL(/editor\.html/);
+    await editorReady(page);
+    await press(page.getByRole('link', { name: 'Close' }), testInfo);
+    await expect(page).toHaveURL(/gallery\.html/);
+    await press((mobile ? page.locator('.app-nav') : page.locator('.top-links')).getByRole('link', { name: /^Bag/ }), testInfo);
+    await expect(page).toHaveURL(/checkout\.html/);
+    await press((mobile ? page.locator('.app-nav') : page.locator('.top-links')).getByRole('link', { name: 'Gallery' }), testInfo);
+    await expect(page).toHaveURL(/gallery\.html/);
   });
 
   await test.step('gallery search, filters, and a design', async () => {
@@ -111,13 +121,31 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
     if (mobile) {
       await press(page.locator('#open-filters'), testInfo);
       await expect(page.locator('#filter-sheet')).toBeVisible();
-      await press(page.locator('#close-filters'), testInfo);
+      await press(page.locator('#cats button').nth(1), testInfo);
+      await press(page.locator('#apply-filters'), testInfo);
+      await press(page.locator('#open-filters'), testInfo);
+      await press(page.locator('#cats button').first(), testInfo);
+      await press(page.locator('#apply-filters'), testInfo);
     } else {
-      await expect(page.locator('#cats')).toBeVisible();
+      await press(page.locator('#cats button').nth(1), testInfo);
+      await expect(page.locator('.card').first()).toBeVisible();
+      await press(page.locator('#cats button').first(), testInfo);
     }
+    await page.waitForFunction(() => document.querySelectorAll('.card').length >= 20);
     await press(page.locator('.card').first(), testInfo);
     await expect(page).toHaveURL(/editor\.html\?design=/);
     await editorReady(page);
+  });
+
+  await test.step('design picker', async () => {
+    if (await page.locator('#panel-designs').getAttribute('data-open') !== 'true') {
+      await press(page.locator('[data-panel="designs"]'), testInfo);
+    }
+    await page.waitForFunction(() => document.querySelectorAll('.design-card').length >= 5);
+    const swap = page.locator('.design-card button', { hasText: 'Swap' }).nth(1);
+    await swap.scrollIntoViewIfNeeded();
+    await press(swap, testInfo);
+    await expect(page.locator('.design-card[data-current="true"]')).toHaveCount(1);
   });
 
   await test.step('text, Done, and Enter', async () => {
