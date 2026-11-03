@@ -231,6 +231,8 @@ function updatePrice() {
   const custom = isCustom();
   const value = custom ? PRICE.custom : PRICE.standard;
   document.getElementById('price').textContent = money(value);
+  const deskPrice = document.getElementById('desk-price');
+  if (deskPrice) deskPrice.textContent = money(value);
   const note = document.getElementById('price-note');
   if (mode === 'custom') note.textContent = 'A design you build is $44.99 CAD.';
   else if (custom) note.textContent = 'Edited designs are $44.99 CAD.';
@@ -580,7 +582,11 @@ function active() {
 }
 
 function phoneEditing() {
-  return window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(max-width: 899px)').matches;
+  return window.matchMedia('(max-width: 1099px)').matches;
+}
+
+function desktopEditor() {
+  return window.matchMedia('(min-width: 1100px)').matches;
 }
 
 function armRetain(obj) {
@@ -707,6 +713,17 @@ function beginTyping() {
 }
 
 function finishTyping() {
+  if (!phoneEditing()) {
+    const obj = canvas.getActiveObject() || retainObject;
+    if (obj?.isEditing && obj.exitEditing) obj.exitEditing();
+    const focused = document.activeElement;
+    if (focused && focused.closest && focused.closest('#type-dock')) focused.blur();
+    if (obj && canvas.getObjects().indexOf(obj) >= 0) {
+      canvas.setActiveObject(obj);
+      canvas.requestRenderAll();
+    }
+    return;
+  }
   const dock = document.getElementById('type-dock');
   const slot = document.getElementById('sheet');
   if (dock && slot && dock.parentElement !== slot) slot.insertBefore(dock, document.getElementById('sheet-text'));
@@ -744,7 +761,7 @@ function showSelection(obj) {
     obj.editable = false;
     if (obj.isEditing && obj.exitEditing) obj.exitEditing();
   }
-  if (preferHandles && obj === retainObject && !typing) {
+  if (phoneEditing() && preferHandles && obj === retainObject && !typing) {
     obj.set({ hasControls: !obj.data?.locked, hasBorders: true });
     canvas.requestRenderAll();
     updateHandleBar();
@@ -1424,14 +1441,13 @@ document.getElementById('keep-edit').addEventListener('click', () => {
 });
 document.getElementById('keep-delete').addEventListener('click', removeActive);
 if (window.visualViewport) {
-  window.visualViewport.addEventListener('resize', () => {
+  const onViewport = () => {
+    if (!phoneEditing()) return;
     armRetain();
     if (typing) syncViewport();
-  });
-  window.visualViewport.addEventListener('scroll', () => {
-    armRetain();
-    if (typing) syncViewport();
-  });
+  };
+  window.visualViewport.addEventListener('resize', onViewport);
+  window.visualViewport.addEventListener('scroll', onViewport);
 }
 document.getElementById('size').addEventListener('input', () => {
   const size = Number(document.getElementById('size').value);
@@ -1564,6 +1580,13 @@ document.querySelectorAll('.tabbar button').forEach((button) => {
 });
 
 function showStage(mode) {
+  if (desktopEditor()) {
+    document.getElementById('art-zoom').hidden = false;
+    document.getElementById('view-stage').hidden = false;
+    document.getElementById('fit-view').hidden = false;
+    ensureViewer().then((ready) => ready && ready.resize());
+    return;
+  }
   const flat = mode === 'flat';
   document.getElementById('art-zoom').hidden = !flat;
   document.getElementById('view-stage').hidden = flat;
@@ -1652,9 +1675,15 @@ document.getElementById('lock').addEventListener('click', () => {
   commit();
 });
 document.getElementById('sheet-close').addEventListener('click', () => {
-  finishTyping();
+  if (phoneEditing()) finishTyping();
+  else {
+    const obj = active();
+    if (obj?.isEditing && obj.exitEditing) obj.exitEditing();
+    closeSheet();
+  }
 });
 document.getElementById('review').addEventListener('click', review);
+document.getElementById('add-cart').addEventListener('click', review);
 document.getElementById('turn-left').addEventListener('click', () => viewer && viewer.turn(-0.35));
 document.getElementById('turn-right').addEventListener('click', () => viewer && viewer.turn(0.35));
 document.getElementById('reset').addEventListener('click', (event) => {
@@ -1716,7 +1745,7 @@ canvas.on('mouse:dblclick', (opt) => {
   const obj = opt.target;
   if (!isText(obj)) return;
   showSelection(obj);
-  const coarse = window.matchMedia('(pointer: coarse)').matches;
+  const coarse = phoneEditing();
   const field = document.getElementById('edit-text');
   if (coarse) {
     if (obj.exitEditing) obj.exitEditing();
@@ -1822,4 +1851,13 @@ if (draft && draft.v === 1 && (draft.wrapKey || (draft.objects && draft.objects.
 
 FONTS.forEach((font) => {
   document.fonts.load(`160px "${font.name}"`).catch(() => {});
+});
+
+if (desktopEditor()) {
+  showStage('both');
+  const designs = document.getElementById('panel-designs');
+  if (designs && designs.dataset.open !== 'true') document.querySelector('[data-panel="designs"]').click();
+}
+window.matchMedia('(min-width: 1100px)').addEventListener('change', () => {
+  showStage(desktopEditor() ? 'both' : 'flat');
 });

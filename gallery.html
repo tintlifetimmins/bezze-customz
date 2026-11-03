@@ -33,29 +33,29 @@
       </label>
       <button type="button" class="filter-btn" id="open-filters" aria-expanded="false" aria-controls="filter-sheet">Filters</button>
     </div>
+    <aside id="filter-sheet" class="filter-sheet" data-open="false" aria-label="Filters">
+      <div class="sheet-head">
+        <h2>Filters</h2>
+        <button type="button" id="close-filters">Close</button>
+      </div>
+      <p class="hint">Category</p>
+      <div class="chips" id="cats" role="group" aria-label="Categories"></div>
+      <p class="hint">Colour</p>
+      <div class="chips" id="colours" role="group" aria-label="Colours"></div>
+      <label class="field">Sort
+        <select id="sort">
+          <option value="popular">Popular</option>
+          <option value="newest">Newest</option>
+          <option value="az">A–Z</option>
+        </select>
+      </label>
+      <button class="btn primary wide" type="button" id="apply-filters">Show designs</button>
+    </aside>
     <p class="count-line" id="count">Sample designs</p>
     <p class="hint" id="empty" hidden>No sample designs match that search.</p>
     <div class="grid" id="grid"></div>
   </main>
   <button type="button" class="sheet-scrim" id="filter-scrim" hidden aria-label="Close filters"></button>
-  <aside id="filter-sheet" class="filter-sheet" data-open="false" aria-label="Filters">
-    <div class="sheet-head">
-      <h2>Filters</h2>
-      <button type="button" id="close-filters">Close</button>
-    </div>
-    <p class="hint">Category</p>
-    <div class="chips" id="cats" role="group" aria-label="Categories"></div>
-    <p class="hint">Colour</p>
-    <div class="chips" id="colours" role="group" aria-label="Colours"></div>
-    <label class="field">Sort
-      <select id="sort">
-        <option value="popular">Popular</option>
-        <option value="newest">Newest</option>
-        <option value="az">A–Z</option>
-      </select>
-    </label>
-    <button class="btn primary wide" type="button" id="apply-filters">Show designs</button>
-  </aside>
   <footer class="site-foot">Prices in CAD · Sample artwork only · Bezze Customz</footer>
   <script type="module" src="js/gallery.js"></script>
 </body>

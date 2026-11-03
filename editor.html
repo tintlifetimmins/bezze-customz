@@ -42,6 +42,7 @@
     </header>
   </div>
   <main class="editor-layout">
+    <div class="canvas-col">
     <div class="view-toggle" role="group" aria-label="Preview">
       <button type="button" id="view-flat" aria-pressed="true">Wrap</button>
       <button type="button" id="view-3d" aria-pressed="false">3D</button>
@@ -57,6 +58,22 @@
           <div class="guide axis-x" id="axis-x" aria-hidden="true"></div>
         </div>
       </div>
+      <p class="zone-label">211 × 246 mm · safe zone</p>
+      <p class="warn" id="zone-warn" hidden>Outside the safe zone. Move it in so it prints cleanly.</p>
+      <button type="button" id="fit-view" class="fit-view">Fit</button>
+      <div id="handle-bar" class="handle-bar" hidden>
+        <button type="button" id="keep-edit">Edit text</button>
+        <button type="button" id="keep-delete">Delete</button>
+      </div>
+    </div>
+    </div>
+    <aside class="desk-col" id="desk-col">
+      <div class="desk-buy">
+        <p class="kicker">20 oz tumbler</p>
+        <b id="desk-price">$39.99</b>
+        <button class="btn primary wide" id="add-cart" type="button">Add to cart</button>
+        <p class="hint">Test checkout · no payment is taken</p>
+      </div>
       <div class="preview-stage" id="view-stage" data-ready="false" hidden>
         <p class="loading">Live preview…</p>
         <canvas id="view3d" aria-label="Live 3D preview of your tumbler. Drag sideways to rotate."></canvas>
@@ -66,14 +83,7 @@
           <button type="button" id="turn-right" aria-label="Turn right">›</button>
         </div>
       </div>
-      <p class="zone-label">211 × 246 mm · safe zone</p>
-      <p class="warn" id="zone-warn" hidden>Outside the safe zone. Move it in so it prints cleanly.</p>
-      <button type="button" id="fit-view" class="fit-view">Fit</button>
-      <div id="handle-bar" class="handle-bar" hidden>
-        <button type="button" id="keep-edit">Edit text</button>
-        <button type="button" id="keep-delete">Delete</button>
-      </div>
-    </div>
+    </aside>
     <div class="editor-side">
       <p class="hint" id="saved" hidden>Drag to rotate</p>
       <p class="hint" id="price-note" hidden></p>
