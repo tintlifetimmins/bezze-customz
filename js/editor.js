@@ -2641,9 +2641,10 @@ FONTS.forEach((font) => {
 });
 document.fonts.addEventListener('loadingdone', () => {
   canvas.getObjects().forEach((obj) => {
-    if (!isText(obj)) return;
-    if (fabric.util.clearFabricFontCache) fabric.util.clearFabricFontCache(obj.fontFamily);
-    obj.initDimensions();
+    const node = textNode(obj);
+    if (!node || typeof node.initDimensions !== 'function') return;
+    if (fabric.util.clearFabricFontCache) fabric.util.clearFabricFontCache(node.fontFamily);
+    node.initDimensions();
     containText(obj);
   });
   canvas.requestRenderAll();

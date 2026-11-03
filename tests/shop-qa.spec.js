@@ -112,7 +112,17 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
   await test.step('gallery search, filters, and a design', async () => {
     await page.waitForFunction(() => document.querySelectorAll('.card').length >= 20);
     await expect(page.locator('.legal-note')).toContainText('not for sale');
-    await expect(page.locator('#count')).toContainText('20');
+    await expect.poll(async () => Number.parseInt(await page.locator('#count').innerText(), 10)).toBeGreaterThanOrEqual(20);
+    const dropTitles = await page.evaluate(async () => {
+      const response = await fetch(new URL('drops/manifest.json', location.href));
+      const manifest = await response.json();
+      const items = Array.isArray(manifest) ? manifest : (manifest.items || []);
+      return items.filter((item) => item.release === 'instant').map((item) => item.title);
+    });
+    expect(dropTitles.length).toBeGreaterThanOrEqual(8);
+    for (const title of dropTitles) {
+      await expect(page.getByRole('heading', { name: title, exact: true })).toBeVisible();
+    }
     const search = page.locator('#q');
     await search.fill('zzzz-no-such-design');
     await expect(page.locator('#empty')).toBeVisible();
