@@ -74,6 +74,21 @@
           <b id="price">$39.99</b>
         </div>
       </section>
+      <section id="panel-designs" class="panel" hidden>
+        <h2>Designs</h2>
+        <p class="hint">Swap replaces the wrap. Add places a design under your name and monogram.</p>
+        <label class="search">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 16l4 4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <input id="design-q" type="search" placeholder="Search designs" autocomplete="off">
+        </label>
+        <div class="chips" id="design-cats" role="group" aria-label="Design categories"></div>
+        <h3 class="drop-heading" id="drop-now-title">This week's drop</h3>
+        <div class="design-list" id="drop-now"></div>
+        <h3 class="drop-heading" id="drop-rest-title">All designs</h3>
+        <p class="hint" id="drop-rest-note">Past drops and the full sample gallery.</p>
+        <div class="design-list" id="drop-rest"></div>
+        <p class="hint" id="design-empty" hidden>No sample designs match.</p>
+      </section>
       <section id="panel-text" class="panel">
         <h2>Text</h2>
         <button class="btn primary wide" id="add-text" type="button">Add your name</button>
@@ -135,6 +150,10 @@
         <div class="layers" id="layers" aria-label="Layers"></div>
       </div>
       <nav class="tabbar" aria-label="Tools">
+        <button type="button" data-panel="designs">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="4" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="4" y="13" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="13" y="13" width="7" height="7" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+          Designs
+        </button>
         <button type="button" data-panel="text" aria-current="true">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6h14M12 6v12M8 18h8" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
           Text

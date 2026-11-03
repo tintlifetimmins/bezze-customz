@@ -1,4 +1,5 @@
 import { drawWrap, getDesign } from './designs.js';
+import { filterCatalog, loadCatalog } from './catalog.js';
 import { paintProductShot } from './thumbs.js';
 import { TumblerViewer } from './tumbler.js';
 import { PRICE, clearDraft, loadDraft, money, saveDraft, setBag } from './store.js';
@@ -135,7 +136,10 @@ fabric.NameText.fromObject = function fromObject(object, callback) {
 const params = new URLSearchParams(location.search);
 const design = getDesign(params.get('design'));
 const mode = design ? 'gallery' : 'custom';
-const currentId = () => design?.id || 'custom';
+const openedId = design?.id || 'custom';
+let baseDesign = design || null;
+let bareMonogram = openedId === 'monogram';
+function currentId() { return openedId; }
 
 const state = { font: 'Great Vibes', ink: design?.ink || '#ffffff', savedAt: 0, monoStyle: 'circle' };
 let canvas;
@@ -178,18 +182,22 @@ canvas = new fabric.Canvas('c', {
 
 function paintWrap(key) {
   state.wrapKey = key || null;
-  const bare = !key && design?.id === 'monogram';
-  const src = drawWrap(key || currentId(), CW, CH, { bare });
+  const gradient = key && String(key).startsWith('grad:');
+  const paintId = gradient ? (baseDesign?.id || 'custom') : (key || baseDesign?.id || 'custom');
+  const bare = paintId === 'monogram' && bareMonogram && !gradient;
+  const src = drawWrap(gradient ? key : paintId, CW, CH, { bare });
   const img = new fabric.Image(src, { originX: 'left', originY: 'top' });
   canvas.setBackgroundImage(img, () => {
     canvas.requestRenderAll();
     scheduleSync();
   });
+  markActiveDesign();
 }
 
 function takeSnap() {
   return JSON.stringify({
     wrapKey: state.wrapKey,
+    baseId: baseDesign?.id || null,
     objects: canvas.toJSON(['data', 'curve']).objects,
   });
 }
@@ -229,8 +237,8 @@ function scheduleSync() {
 }
 
 function isCustom() {
-  if (mode === 'custom') return true;
-  if (state.wrapKey) return true;
+  if (state.wrapKey && String(state.wrapKey).startsWith('grad:')) return true;
+  if (!baseDesign) return true;
   return canvas.getObjects().some((obj) => !obj.data?.starter);
 }
 
@@ -250,6 +258,7 @@ function isText(obj) {
 }
 
 function layerName(obj) {
+  if (obj.data?.kind === 'design') return obj.data.name || 'Design';
   if (obj.data?.kind === 'monogram') return `Monogram ${obj.data.initials || ''}`.trim();
   if (isText(obj)) return obj.text || 'Name';
   if (obj.data?.kind === 'clip') return obj.data.name || 'Shape';
@@ -308,6 +317,8 @@ function commit() {
 
 function restore(snap) {
   const data = JSON.parse(snap);
+  if (data.baseId) baseDesign = getDesign(data.baseId) || baseDesign;
+  if (data.baseId && data.baseId !== 'monogram') bareMonogram = false;
   lock = true;
   canvas.discardActiveObject();
   canvas.getObjects().slice().forEach((obj) => canvas.remove(obj));
@@ -588,14 +599,14 @@ function showSelection(obj) {
     closeSheet();
     return;
   }
-  const kind = obj.data?.kind === 'monogram' ? 'monogram' : isText(obj) ? 'text' : obj.data?.kind === 'clip' ? 'clip' : 'object';
+  const kind = obj.data?.kind === 'monogram' ? 'monogram' : isText(obj) ? 'text' : obj.data?.kind === 'clip' ? 'clip' : obj.data?.kind === 'design' ? 'design' : 'object';
   sheet.dataset.open = 'true';
   sheet.dataset.kind = kind;
   document.body.classList.add('sheet-open');
   document.getElementById('sheet-text').hidden = kind !== 'text';
   document.getElementById('sheet-mono').hidden = kind !== 'monogram';
   document.getElementById('sheet-clip').hidden = kind !== 'clip';
-  document.getElementById('sheet-title').textContent = kind === 'monogram' ? 'Edit monogram' : kind === 'text' ? 'Edit text' : kind === 'clip' ? 'Edit shape' : 'Selected';
+  document.getElementById('sheet-title').textContent = kind === 'monogram' ? 'Edit monogram' : kind === 'text' ? 'Edit text' : kind === 'clip' ? 'Edit shape' : kind === 'design' ? 'Design layer' : 'Selected';
   document.getElementById('obj-actions').hidden = false;
   document.getElementById('lock').textContent = obj.data?.locked ? 'Unlock' : 'Lock';
   if (kind === 'text' && document.activeElement !== document.getElementById('edit-text')) fillTextSheet(obj);
@@ -971,6 +982,128 @@ function review() {
   location.href = 'checkout.html';
 }
 
+function swapDesign(id) {
+  const picked = getDesign(id);
+  if (!picked) return;
+  baseDesign = picked;
+  if (id !== 'monogram') bareMonogram = false;
+  state.wrapKey = null;
+  paintWrap(null);
+  commit();
+  renderDesignLists();
+}
+
+function addDesignLayer(id) {
+  const picked = getDesign(id);
+  if (!picked) return;
+  const src = drawWrap(id, CW, CH, { bare: false });
+  const img = new fabric.Image(src, {
+    originX: 'center',
+    originY: 'center',
+    left: CW / 2,
+    top: CH / 2,
+    data: { kind: 'design', designId: id, name: picked.name },
+  });
+  img.scaleToWidth(CW * 0.7);
+  const objects = canvas.getObjects();
+  let at = 0;
+  objects.forEach((obj, index) => {
+    if (obj.data?.kind === 'design') at = index + 1;
+  });
+  canvas.insertAt(img, at, false);
+  canvas.setActiveObject(img);
+  commit();
+  showSelection(img);
+}
+
+function designThumb(id) {
+  return drawWrap(id, 168, 144, { bare: false }).toDataURL('image/jpeg', 0.82);
+}
+
+const catalog = loadCatalog();
+const designFilter = { q: '', cat: 'All' };
+
+function designCard(item) {
+  const card = document.createElement('article');
+  card.className = 'design-card';
+  card.dataset.id = item.id;
+  const current = (baseDesign?.id || '') === item.id && !state.wrapKey;
+  if (current) card.dataset.current = 'true';
+  const img = new Image();
+  img.src = designThumb(item.id);
+  img.alt = '';
+  const copy = document.createElement('div');
+  const title = document.createElement('strong');
+  title.textContent = item.name;
+  const meta = document.createElement('p');
+  meta.className = 'meta';
+  meta.textContent = item.badge ? `Sample · ${item.badge}` : 'Sample';
+  const actions = document.createElement('div');
+  actions.className = 'design-actions';
+  const swap = document.createElement('button');
+  swap.type = 'button';
+  swap.className = 'primary';
+  swap.textContent = 'Swap';
+  swap.addEventListener('click', () => swapDesign(item.id));
+  const add = document.createElement('button');
+  add.type = 'button';
+  add.textContent = 'Add';
+  add.addEventListener('click', () => addDesignLayer(item.id));
+  actions.append(swap, add);
+  copy.append(title, meta, actions);
+  card.append(img, copy);
+  return card;
+}
+
+function renderDesignLists() {
+  const matches = filterCatalog(catalog, designFilter);
+  const now = matches.filter((item) => item.drop === catalog.thisDrop);
+  const rest = matches.filter((item) => item.drop !== catalog.thisDrop);
+  const nowBox = document.getElementById('drop-now');
+  const restBox = document.getElementById('drop-rest');
+  nowBox.replaceChildren(...now.map(designCard));
+  restBox.replaceChildren(...rest.map(designCard));
+  const empty = matches.length === 0;
+  document.getElementById('design-empty').hidden = !empty;
+  document.getElementById('drop-now-title').hidden = now.length === 0;
+  nowBox.hidden = now.length === 0;
+  document.getElementById('drop-rest-title').hidden = rest.length === 0;
+  document.getElementById('drop-rest-note').hidden = rest.length === 0;
+  restBox.hidden = rest.length === 0;
+}
+
+function markActiveDesign() {
+  const current = baseDesign?.id || '';
+  document.querySelectorAll('.design-card').forEach((card) => {
+    if (card.dataset.id === current && !state.wrapKey) card.dataset.current = 'true';
+    else delete card.dataset.current;
+  });
+}
+
+function bootDesigns() {
+  const cats = document.getElementById('design-cats');
+  catalog.categories.forEach((name, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = name;
+    button.dataset.cat = name;
+    button.setAttribute('aria-pressed', index === 0 ? 'true' : 'false');
+    button.addEventListener('click', () => {
+      designFilter.cat = name;
+      cats.querySelectorAll('button').forEach((item) => {
+        item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+      });
+      renderDesignLists();
+    });
+    cats.append(button);
+  });
+  document.getElementById('design-q').addEventListener('input', (event) => {
+    designFilter.q = event.target.value;
+    renderDesignLists();
+  });
+  renderDesignLists();
+}
+
 function bootUi() {
   fontButtons(document.getElementById('sheet-fonts'), async (font) => {
     state.font = font.name;
@@ -1069,6 +1202,7 @@ function filterClips() {
 }
 
 bootUi();
+bootDesigns();
 
 document.getElementById('add-text').addEventListener('click', addText);
 document.getElementById('add-mono').addEventListener('click', () => {
@@ -1258,6 +1392,8 @@ document.getElementById('reset').addEventListener('click', (event) => {
   canvas.getObjects().slice().forEach((obj) => canvas.remove(obj));
   lock = false;
   state.wrapKey = null;
+  baseDesign = design || null;
+  bareMonogram = openedId === 'monogram';
   paintWrap(null);
   seedMonogram();
   stack = [];

@@ -546,6 +546,37 @@ input[type="color"] {
 }
 .tabbar svg { width: 20px; height: 20px; }
 .tabbar button[aria-current="true"] { color: var(--fuchsia); }
+.tabbar button { font-size: 10px; }
+
+.drop-heading { font-size: 15px; margin: 16px 0 8px; }
+.design-list { display: flex; flex-direction: column; gap: 8px; }
+.design-card {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  gap: 10px;
+  align-items: center;
+  background: #141416;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 8px;
+}
+.design-card[data-current="true"] { border-color: var(--fuchsia); box-shadow: inset 0 0 0 1px var(--fuchsia); }
+.design-card img { width: 84px; height: 72px; object-fit: cover; border-radius: 8px; background: #0c0c0e; }
+.design-card strong { display: block; font-size: 14px; }
+.design-card .meta { margin: 2px 0 6px; }
+.design-actions { display: flex; gap: 6px; }
+.design-actions button {
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #101012;
+  color: white;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.design-actions button.primary {
+  background: var(--fuchsia);
+  border-color: transparent;
+}
 
 .sheet { width: min(640px, calc(100% - 32px)); margin: 12px auto 48px; }
 .line {
