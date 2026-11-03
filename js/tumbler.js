@@ -297,12 +297,13 @@ export class TumblerViewer {
     }
   }
 
-  setWrap(source, { trimmed = false } = {}) {
+  setWrap(source, { trimmed = false, mark = 'strong' } = {}) {
     if (!source || !source.width || !source.height) return;
     const ctx = this.buffer.getContext('2d');
     ctx.clearRect(0, 0, this.buffer.width, this.buffer.height);
     ctx.drawImage(source, 0, 0, this.buffer.width, this.buffer.height);
-    stampWatermark(ctx, this.buffer.width, this.buffer.height);
+    if (mark === 'light') stampWatermark(ctx, this.buffer.width, this.buffer.height, 'light');
+    else if (mark !== 'none') stampWatermark(ctx, this.buffer.width, this.buffer.height);
     this.applyCrop(trimmed);
     this.texture.needsUpdate = true;
     this.baseMat.color.copy(sampleColor(this.buffer));

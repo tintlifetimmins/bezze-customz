@@ -1,7 +1,6 @@
 const MARK = 'BEZZE CUSTOMZ · PREVIEW';
 
-export function stampWatermark(ctx, width, height) {
-  if (!ctx || !width || !height) return;
+function stampStrong(ctx, width, height) {
   ctx.save();
   ctx.globalAlpha = 0.72;
   ctx.translate(width / 2, height / 2);
@@ -22,6 +21,41 @@ export function stampWatermark(ctx, width, height) {
     }
   }
   ctx.restore();
+}
+
+function stampLight(ctx, width, height) {
+  ctx.save();
+  ctx.globalAlpha = 0.08;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffffff';
+  const cols = 3;
+  const rows = 3;
+  const stepX = width / cols;
+  const stepY = height / rows;
+  let size = Math.round(Math.min(stepX, stepY) / 8);
+  const fit = () => {
+    ctx.font = `400 ${size}px Arial, sans-serif`;
+    return ctx.measureText(MARK).width;
+  };
+  while (size > 12 && fit() > stepX * 0.62) size -= 1;
+  fit();
+  for (let row = 0; row < rows; row += 1) {
+    for (let col = 0; col < cols; col += 1) {
+      ctx.save();
+      ctx.translate(stepX * (col + 0.5), stepY * (row + 0.5));
+      ctx.rotate(-Math.PI / 5);
+      ctx.fillText(MARK, 0, 0);
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+
+export function stampWatermark(ctx, width, height, tone = 'strong') {
+  if (!ctx || !width || !height) return;
+  if (tone === 'light') stampLight(ctx, width, height);
+  else stampStrong(ctx, width, height);
 }
 
 export function previewCanvas(source, max = 800) {

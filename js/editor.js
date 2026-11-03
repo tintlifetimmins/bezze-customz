@@ -250,10 +250,6 @@ function lockExport(el) {
 }
 lockExport(canvas.getElement());
 lockExport(canvas.upperCanvasEl);
-canvas.on('after:render', () => {
-  const ctx = canvas.contextContainer;
-  if (ctx) stampWatermark(ctx, canvas.getWidth(), canvas.getHeight());
-});
 
 function paintWrap(key) {
   state.wrapKey = key || null;
@@ -261,7 +257,7 @@ function paintWrap(key) {
   const paintId = gradient ? (baseDesign?.id || 'custom') : (key || baseDesign?.id || 'custom');
   const bare = paintId === 'monogram' && bareMonogram && !gradient;
   const src = drawWrap(gradient ? key : paintId, CW, CH);
-  stampWatermark(src.getContext('2d'), src.width, src.height);
+  stampWatermark(src.getContext('2d'), src.width, src.height, 'light');
   const img = new fabric.Image(src, { originX: 'left', originY: 'top', evented: false, selectable: false });
   canvas.setBackgroundImage(img, () => {
     canvas.requestRenderAll();
@@ -314,9 +310,9 @@ function flatWrapCanvas() {
 function scheduleSync() {
   cancelAnimationFrame(syncFrame);
   syncFrame = requestAnimationFrame(() => {
-    const source = previewCanvas(flatWrapCanvas(), 800);
+    const source = flatWrapCanvas();
     if (viewer) {
-      viewer.setWrap(source, { trimmed: false });
+      viewer.setWrap(source, { trimmed: false, mark: 'none' });
       document.getElementById('view-stage').dataset.ready = 'true';
     } else {
       const img = document.getElementById('view-fallback');
