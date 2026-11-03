@@ -265,7 +265,10 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
     await expect(page.locator('#graphics button')).toHaveCount(30);
     await press(page.locator('#shapes button').first(), testInfo);
     await expect.poll(async () => (await read(page)).kind).toBe('clip');
-    if (!mobile) await press(page.locator('#sheet-close'), testInfo);
+    await press(page.locator('#sheet-close'), testInfo);
+    if (mobile && await page.locator('#panel-clip').getAttribute('data-open') !== 'true') {
+      await press(page.locator('[data-panel="clip"]'), testInfo);
+    }
     await press(page.locator('#graphics button').first(), testInfo);
     await expect.poll(async () => (await read(page)).kind).toBe('graphic');
     await expect(page.locator('#panel-clip .legal-note, #sheet-graphic .legal-note').first()).toContainText('not for sale');
