@@ -129,6 +129,10 @@ let stack = [];
 let index = -1;
 let lock = false;
 let filling = false;
+let typing = false;
+let preferHandles = false;
+let retainObject = null;
+let retainUntil = 0;
 let syncFrame = 0;
 let savedOk = true;
 let warned = false;
@@ -336,11 +340,12 @@ function fit() {
   canvas.setDimensions({ width, height: Math.round(width * CH / CW) }, { cssOnly: true });
   const ratio = CW / width;
   const px = (screenPx) => Math.max(1, Math.round(screenPx * ratio));
-  fabric.Object.prototype.cornerSize = px(18);
-  fabric.Object.prototype.touchCornerSize = px(36);
-  fabric.Object.prototype.borderScaleFactor = px(2);
-  fabric.Object.prototype.padding = px(6);
-  fabric.Object.prototype.rotatingPointOffset = px(28);
+  fabric.Object.prototype.cornerSize = px(26);
+  fabric.Object.prototype.touchCornerSize = px(48);
+  fabric.Object.prototype.borderScaleFactor = px(2.5);
+  fabric.Object.prototype.padding = px(14);
+  fabric.Object.prototype.rotatingPointOffset = px(44);
+  canvas.targetFindTolerance = px(24);
   canvas.requestRenderAll();
 }
 
@@ -404,7 +409,7 @@ function makeName(meta) {
     left: meta.left || CW / 2,
     top: meta.top || CH / 2,
     angle: meta.angle || 0,
-    editable: true,
+    editable: !phoneEditing(),
     data: { kind: 'text', ...(meta.data || {}) },
   });
   applyTextPaint(text, meta);
@@ -574,10 +579,175 @@ function active() {
   return canvas.getActiveObject();
 }
 
+function phoneEditing() {
+  return window.matchMedia('(pointer: coarse)').matches || window.matchMedia('(max-width: 899px)').matches;
+}
+
+function armRetain(obj) {
+  const next = obj || canvas.getActiveObject() || retainObject;
+  if (!next) return;
+  retainObject = next;
+  retainUntil = Date.now() + 900;
+}
+
+function shouldRetain() {
+  if (!retainObject || canvas.getObjects().indexOf(retainObject) < 0) return false;
+  return typing || Date.now() < retainUntil;
+}
+
+function restoreRetained() {
+  const obj = retainObject;
+  if (!obj || canvas.getObjects().indexOf(obj) < 0) return;
+  if (canvas.getActiveObject() === obj) return;
+  lock = true;
+  canvas.setActiveObject(obj);
+  obj.set({ hasControls: !obj.data?.locked, hasBorders: true, selectable: true });
+  lock = false;
+  canvas.requestRenderAll();
+}
+
+function updateHandleBar() {
+  const bar = document.getElementById('handle-bar');
+  if (!bar) return;
+  const obj = canvas.getActiveObject();
+  const sheetOpen = document.getElementById('sheet').dataset.open === 'true';
+  bar.hidden = !obj || sheetOpen || document.body.classList.contains('typing');
+  const edit = document.getElementById('keep-edit');
+  if (!edit) return;
+  if (isText(obj)) edit.textContent = 'Edit text';
+  else if (obj?.data?.kind === 'monogram') edit.textContent = 'Edit monogram';
+  else edit.textContent = 'Edit';
+}
+
+function closePanels() {
+  document.querySelectorAll('.panel').forEach((item) => { item.dataset.open = 'false'; });
+  document.querySelectorAll('.tabbar button').forEach((tab) => tab.setAttribute('aria-current', 'false'));
+}
+
+function visibleFrame() {
+  const vv = window.visualViewport;
+  if (!vv) return { top: 0, left: 0, width: window.innerWidth, height: window.innerHeight };
+  return { top: vv.offsetTop, left: vv.offsetLeft, width: vv.width, height: vv.height };
+}
+
+function clearDockPosition() {
+  const dock = document.getElementById('type-dock');
+  if (!dock) return;
+  dock.style.top = '';
+  dock.style.left = '';
+  dock.style.width = '';
+}
+
+function revealActive() {
+  if (!typing) return;
+  const obj = canvas.getActiveObject() || retainObject;
+  const dock = document.getElementById('type-dock');
+  const stage = document.getElementById('stage');
+  if (!obj || !dock || dock.hidden || !stage) return;
+  const rect = frame.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  const box = obj.getBoundingRect(true, true);
+  const top = rect.top + (box.top / CH) * rect.height;
+  const bottom = rect.top + ((box.top + box.height) / CH) * rect.height;
+  const limit = dock.getBoundingClientRect().top - 8;
+  const ceiling = stage.getBoundingClientRect().top + 8;
+  if (limit <= ceiling) return;
+  if (bottom > limit || top < ceiling) {
+    const mid = (top + bottom) / 2;
+    const target = (ceiling + Math.min(limit, ceiling + rect.height)) / 2;
+    viewY += target - mid;
+    applyView();
+  }
+}
+
+function syncViewport() {
+  const frameBox = visibleFrame();
+  const dock = document.getElementById('type-dock');
+  const dockH = dock ? Math.ceil(dock.getBoundingClientRect().height || 64) : 64;
+  document.documentElement.style.setProperty('--vv-top', frameBox.top + 'px');
+  document.documentElement.style.setProperty('--vv-left', frameBox.left + 'px');
+  document.documentElement.style.setProperty('--vv-width', frameBox.width + 'px');
+  document.documentElement.style.setProperty('--vv-height', frameBox.height + 'px');
+  document.documentElement.style.setProperty('--dock-h', dockH + 'px');
+  if (dock && typing) {
+    dock.hidden = false;
+    dock.style.top = (frameBox.top + frameBox.height - dockH) + 'px';
+    dock.style.left = frameBox.left + 'px';
+    dock.style.width = frameBox.width + 'px';
+  }
+  if (typing) window.scrollTo(0, 0);
+  requestAnimationFrame(() => {
+    revealActive();
+    requestAnimationFrame(revealActive);
+  });
+}
+
+function beginTyping() {
+  const obj = canvas.getActiveObject();
+  if (!phoneEditing() || !obj) return;
+  if (typing) {
+    syncViewport();
+    return;
+  }
+  typing = true;
+  if (obj.isEditing && obj.exitEditing) obj.exitEditing();
+  retainObject = obj;
+  preferHandles = false;
+  const dock = document.getElementById('type-dock');
+  document.body.append(dock);
+  dock.hidden = false;
+  document.getElementById('edit-text').hidden = !isText(obj);
+  document.getElementById('mono-letters').hidden = obj.data?.kind !== 'monogram';
+  document.body.classList.add('typing');
+  closePanels();
+  const field = isText(obj) ? document.getElementById('edit-text') : document.getElementById('mono-letters');
+  if (document.activeElement !== field) field.focus({ preventScroll: true });
+  syncViewport();
+  requestAnimationFrame(syncViewport);
+}
+
+function finishTyping() {
+  const dock = document.getElementById('type-dock');
+  const slot = document.getElementById('sheet');
+  if (dock && slot && dock.parentElement !== slot) slot.insertBefore(dock, document.getElementById('sheet-text'));
+  const obj = canvas.getActiveObject() || retainObject;
+  typing = false;
+  document.body.classList.remove('typing');
+  clearDockPosition();
+  retainObject = obj || null;
+  retainUntil = Date.now() + 900;
+  preferHandles = !!obj;
+  const focused = document.activeElement;
+  if (focused && focused.closest && focused.closest('#type-dock')) focused.blur();
+  if (obj?.isEditing && obj.exitEditing) obj.exitEditing();
+  if (obj && canvas.getObjects().indexOf(obj) >= 0) {
+    lock = true;
+    canvas.setActiveObject(obj);
+    obj.set({ hasControls: !obj.data?.locked, hasBorders: true, selectable: true });
+    lock = false;
+    canvas.requestRenderAll();
+  }
+  closeSheet();
+  closePanels();
+  updateHandleBar();
+  scheduleSync();
+}
+
 function showSelection(obj) {
   const sheet = document.getElementById('sheet');
   if (!obj) {
     closeSheet();
+    updateHandleBar();
+    return;
+  }
+  if (phoneEditing() && isText(obj)) {
+    obj.editable = false;
+    if (obj.isEditing && obj.exitEditing) obj.exitEditing();
+  }
+  if (preferHandles && obj === retainObject && !typing) {
+    obj.set({ hasControls: !obj.data?.locked, hasBorders: true });
+    canvas.requestRenderAll();
+    updateHandleBar();
     return;
   }
   const kind = obj.data?.kind === 'monogram' ? 'monogram' : isText(obj) ? 'text' : obj.data?.kind === 'clip' ? 'clip' : obj.data?.kind === 'design' ? 'design' : 'object';
@@ -587,6 +757,10 @@ function showSelection(obj) {
   document.getElementById('sheet-text').hidden = kind !== 'text';
   document.getElementById('sheet-mono').hidden = kind !== 'monogram';
   document.getElementById('sheet-clip').hidden = kind !== 'clip';
+  const dock = document.getElementById('type-dock');
+  dock.hidden = kind !== 'text' && kind !== 'monogram';
+  document.getElementById('edit-text').hidden = kind !== 'text';
+  document.getElementById('mono-letters').hidden = kind !== 'monogram';
   document.getElementById('sheet-title').textContent = kind === 'monogram' ? 'Edit monogram' : kind === 'text' ? 'Edit text' : kind === 'clip' ? 'Edit shape' : kind === 'design' ? 'Design layer' : 'Selected';
   document.getElementById('obj-actions').hidden = false;
   document.getElementById('lock').textContent = obj.data?.locked ? 'Unlock' : 'Lock';
@@ -595,6 +769,7 @@ function showSelection(obj) {
   if (kind === 'clip') document.getElementById('clip-ink').value = toHex(obj.data?.fill || '#ffffff');
   refreshLayers();
   checkSafe(obj);
+  updateHandleBar();
 }
 
 function closeSheet() {
@@ -605,6 +780,7 @@ function closeSheet() {
   document.getElementById('zone-warn').hidden = true;
   document.querySelector('.guide.safe').classList.remove('is-hot');
   refreshLayers();
+  updateHandleBar();
 }
 
 function fillTextSheet(obj) {
@@ -706,8 +882,9 @@ async function addText() {
   commit();
   showSelection(obj);
   const field = document.getElementById('edit-text');
-  field.focus();
+  field.focus({ preventScroll: true });
   field.select();
+  beginTyping();
 }
 
 function liveText(mutate, doCommit) {
@@ -757,8 +934,10 @@ async function addMonogram(initials, style) {
   canvas.setActiveObject(obj);
   commit();
   showSelection(obj);
-  document.getElementById('mono-letters').focus();
-  document.getElementById('mono-letters').select();
+  const field = document.getElementById('mono-letters');
+  field.focus({ preventScroll: true });
+  field.select();
+  beginTyping();
 }
 
 function seedMonogram() {
@@ -851,6 +1030,12 @@ async function addPhoto(file) {
 function removeActive() {
   const obj = active();
   if (!obj) return;
+  if (retainObject === obj) retainObject = null;
+  retainUntil = 0;
+  preferHandles = false;
+  typing = false;
+  document.body.classList.remove('typing');
+  clearDockPosition();
   canvas.remove(obj);
   closeSheet();
   commit();
@@ -929,6 +1114,8 @@ function productTitle() {
 }
 
 function exportPrintCanvas() {
+  retainObject = null;
+  retainUntil = 0;
   const editing = canvas.getActiveObject();
   if (editing?.exitEditing) editing.exitEditing();
   canvas.discardActiveObject();
@@ -1202,10 +1389,50 @@ document.getElementById('edit-text').addEventListener('input', () => {
     obj.set('text', document.getElementById('edit-text').value);
     obj.initDimensions();
   });
+  if (typing) requestAnimationFrame(revealActive);
 });
 document.getElementById('edit-text').addEventListener('change', () => {
   if (isText(active())) commit();
 });
+function watchTypeField(field) {
+  field.addEventListener('focus', () => beginTyping());
+  field.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      finishTyping();
+    }
+  });
+  field.addEventListener('focusout', () => {
+    armRetain();
+    if (!phoneEditing()) return;
+    setTimeout(() => {
+      if (!typing) return;
+      const el = document.activeElement;
+      if (el && el.closest && el.closest('#type-dock')) return;
+      finishTyping();
+    }, 80);
+  });
+}
+watchTypeField(document.getElementById('edit-text'));
+watchTypeField(document.getElementById('mono-letters'));
+document.getElementById('type-done').addEventListener('pointerdown', (event) => event.preventDefault());
+document.getElementById('type-done').addEventListener('click', () => finishTyping());
+document.getElementById('keep-edit').addEventListener('click', () => {
+  preferHandles = false;
+  const obj = active();
+  if (obj) showSelection(obj);
+});
+document.getElementById('keep-delete').addEventListener('click', removeActive);
+if (window.visualViewport) {
+  window.visualViewport.addEventListener('resize', () => {
+    armRetain();
+    if (typing) syncViewport();
+  });
+  window.visualViewport.addEventListener('scroll', () => {
+    armRetain();
+    if (typing) syncViewport();
+  });
+}
 document.getElementById('size').addEventListener('input', () => {
   const size = Number(document.getElementById('size').value);
   document.getElementById('size-label').textContent = `${Math.round(size / PX)} mm`;
@@ -1425,9 +1652,7 @@ document.getElementById('lock').addEventListener('click', () => {
   commit();
 });
 document.getElementById('sheet-close').addEventListener('click', () => {
-  canvas.discardActiveObject();
-  canvas.requestRenderAll();
-  closeSheet();
+  finishTyping();
 });
 document.getElementById('review').addEventListener('click', review);
 document.getElementById('turn-left').addEventListener('click', () => viewer && viewer.turn(-0.35));
@@ -1522,8 +1747,19 @@ canvas.on('object:moving', (event) => {
 canvas.on('object:scaling', (event) => scheduleSyncAndSafe(event.target));
 canvas.on('object:rotating', (event) => scheduleSyncAndSafe(event.target));
 canvas.on('selection:created', (event) => showSelection(event.selected?.[0] || active()));
-canvas.on('selection:updated', (event) => showSelection(event.selected?.[0] || active()));
-canvas.on('selection:cleared', () => { if (!lock) closeSheet(); });
+canvas.on('selection:updated', (event) => {
+  preferHandles = false;
+  showSelection(event.selected?.[0] || active());
+});
+canvas.on('selection:cleared', () => {
+  if (lock) return;
+  if (shouldRetain()) {
+    queueMicrotask(restoreRetained);
+    return;
+  }
+  preferHandles = false;
+  closeSheet();
+});
 
 window.addEventListener('keydown', (event) => {
   const tag = document.activeElement && document.activeElement.tagName;

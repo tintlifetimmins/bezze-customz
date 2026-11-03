@@ -2,7 +2,7 @@
 <html lang="en-CA">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
   <meta name="theme-color" content="#070708">
   <title>Your design · Bezze Customz</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
@@ -69,6 +69,10 @@
       <p class="zone-label">211 × 246 mm · safe zone</p>
       <p class="warn" id="zone-warn" hidden>Outside the safe zone. Move it in so it prints cleanly.</p>
       <button type="button" id="fit-view" class="fit-view">Fit</button>
+      <div id="handle-bar" class="handle-bar" hidden>
+        <button type="button" id="keep-edit">Edit text</button>
+        <button type="button" id="keep-delete">Delete</button>
+      </div>
     </div>
     <div class="editor-side">
       <p class="hint" id="saved" hidden>Drag to rotate</p>
@@ -93,7 +97,7 @@
       <section id="panel-text" class="panel" data-open="false">
         <h2>Text</h2>
         <button class="btn primary wide" id="add-text" type="button">Add your name</button>
-        <p class="hint">Tap a name to select it. Edit it in the sheet, or double-tap to type on the cup.</p>
+        <p class="hint">Tap a name to select it. Type above the keyboard, then Done — it stays selected so you can move it.</p>
         <p class="hint">AI styles — coming soon. 3 free tries, then $1 per 4 tries.</p>
         <div class="style-row ai-chips" hidden>
           <button type="button" aria-pressed="false">Soft glam</button>
@@ -170,10 +174,12 @@
       <h2 id="sheet-title">Edit text</h2>
       <button type="button" id="sheet-close" aria-label="Close editor">Close</button>
     </div>
+    <div id="type-dock" class="type-dock" hidden>
+      <input id="edit-text" class="type-input" type="text" autocomplete="off" autocapitalize="words" enterkeyhint="done" aria-label="Edit text">
+      <input id="mono-letters" class="type-input" type="text" maxlength="3" autocapitalize="characters" autocomplete="off" enterkeyhint="done" aria-label="Monogram initials" hidden>
+      <button type="button" id="type-done">Done</button>
+    </div>
     <div id="sheet-text">
-      <label class="field">Edit text
-        <input id="edit-text" type="text" autocomplete="off" enterkeyhint="done" aria-label="Edit text">
-      </label>
       <div class="font-row" id="sheet-fonts"></div>
       <div class="colour-row">
         <div class="swatches" id="ink-swatches"></div>
@@ -202,9 +208,6 @@
       </div>
     </div>
     <div id="sheet-mono" hidden>
-      <label class="field">Initials
-        <input id="mono-letters" maxlength="3" autocapitalize="characters" autocomplete="off" aria-label="Monogram initials">
-      </label>
       <div class="style-row" id="mono-styles">
         <button type="button" data-style="circle">Circle</button>
         <button type="button" data-style="vine">Vine</button>

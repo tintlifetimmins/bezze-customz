@@ -927,6 +927,81 @@ body.editor-app .shape { min-height: 86px; }
 body.editor-app .shape svg { width: 40px; height: 40px; }
 body.editor-app .chips button { min-height: 44px; }
 body.editor-app .edit-sheet { bottom: 76px; z-index: 36; max-height: min(50vh, 440px); }
+body.editor-app.typing {
+  position: fixed;
+  left: var(--vv-left, 0px);
+  top: var(--vv-top, 0px);
+  width: var(--vv-width, 100%);
+  height: var(--vv-height, 100dvh);
+  overflow: hidden;
+}
+body.editor-app.typing .edit-sheet {
+  transform: none;
+  visibility: hidden;
+  pointer-events: none;
+}
+body.editor-app.typing .tabbar { display: none; }
+body.editor-app.typing .stage { padding-bottom: var(--dock-h, 72px); }
+body.editor-app.typing .art-frame {
+  width: min(100%, max(160px, calc((var(--vv-height) - var(--dock-h, 72px) - 168px) * 252 / 217)));
+}
+.type-dock {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 4px 0 8px;
+}
+.type-dock[hidden] { display: none !important; }
+.type-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 48px;
+  font-size: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: #141416;
+  color: white;
+  padding: 0 12px;
+}
+#type-done {
+  min-height: 48px;
+  min-width: 76px;
+  border: 0;
+  border-radius: 12px;
+  background: white;
+  color: #111;
+  font-weight: 700;
+}
+body.editor-app.typing #type-dock {
+  position: fixed;
+  z-index: 80;
+  visibility: visible;
+  pointer-events: auto;
+  display: flex;
+  margin: 0;
+  padding: 8px 12px;
+  background: #121214;
+  border-top: 1px solid rgba(255, 255, 255, 0.14);
+  box-sizing: border-box;
+}
+.handle-bar {
+  position: absolute;
+  left: 10px;
+  bottom: 88px;
+  z-index: 6;
+  display: flex;
+  gap: 8px;
+}
+.handle-bar button {
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: #141416;
+  color: white;
+  font-weight: 650;
+}
+#keep-delete { color: #ffb4c8; }
 body.editor-app .btn.wide { min-height: 52px; }
 
 .has-app-nav { padding-bottom: calc(104px + env(safe-area-inset-bottom)); }
