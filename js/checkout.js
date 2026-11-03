@@ -77,14 +77,79 @@ function fieldError(id, message) {
   document.getElementById(id).setAttribute('aria-invalid', message ? 'true' : 'false');
 }
 
+function loadImage(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+
+function fitTexture(img) {
+  const longest = Math.max(img.naturalWidth || img.width, img.naturalHeight || img.height);
+  const scale = Math.min(1, 800 / longest);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round((img.naturalWidth || img.width) * scale));
+  canvas.height = Math.max(1, Math.round((img.naturalHeight || img.height) * scale));
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  return canvas;
+}
+
+async function showTumbler(order) {
+  const stage = document.getElementById('confirm-stage');
+  const canvas = document.getElementById('confirm-view');
+  const still = document.getElementById('done-shot');
+  const textureSrc = order.preview || '';
+  still.draggable = false;
+  still.src = textureSrc || order.thumb || '';
+  still.alt = 'Watermarked tumbler preview. Not a print file.';
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  stage.dataset.spin = reduced ? 'off' : 'on';
+  if (!textureSrc) {
+    canvas.hidden = true;
+    still.hidden = false;
+    window.__confirm = { reduced: true, ready: true, angle: () => 0 };
+    return;
+  }
+  try {
+    const img = await loadImage(textureSrc);
+    const { TumblerViewer } = await import('./tumbler.js');
+    const viewer = new TumblerViewer(canvas, {
+      spin: false,
+      distance: 76,
+      exposure: 1.05,
+      maxPixelRatio: 1.5,
+    });
+    viewer.setWrap(fitTexture(img), { trimmed: false, mark: 'none' });
+    new ResizeObserver(() => viewer.resize()).observe(stage);
+    window.__confirm = { reduced, ready: true, angle: () => viewer.angle };
+    still.hidden = true;
+    canvas.hidden = false;
+    if (reduced) return;
+    const turnMs = 13500;
+    let last = performance.now();
+    const loop = (now) => {
+      const dt = now - last;
+      last = now;
+      if (!viewer.dragging && !document.hidden) viewer.turn((dt / turnMs) * Math.PI * 2);
+      viewer._raf = requestAnimationFrame(loop);
+    };
+    viewer._raf = requestAnimationFrame(loop);
+  } catch (err) {
+    console.error(err);
+    canvas.hidden = true;
+    still.hidden = false;
+    stage.dataset.spin = 'off';
+    window.__confirm = { reduced: true, ready: true, failed: true, error: String(err && err.stack || err), angle: () => 0 };
+  }
+}
+
 function showDone(order) {
   show('done');
   document.getElementById('thanks').textContent = 'Thanks, ' + order.customer.name.split(' ')[0] + '.';
   document.getElementById('order-id').textContent = order.id;
-  const shot = document.getElementById('done-shot');
-  shot.draggable = false;
-  shot.src = order.thumb || '';
-  shot.alt = 'Watermarked tumbler preview. Not a print file.';
+  showTumbler(order);
   const when = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Toronto',
     dateStyle: 'medium',
@@ -152,6 +217,7 @@ document.getElementById('pay').addEventListener('submit', (event) => {
     subtitle: bag.subtitle,
     design: bag.design || null,
     thumb: bag.thumb,
+    preview: bag.preview || '',
     delivery,
     qty,
     totals,

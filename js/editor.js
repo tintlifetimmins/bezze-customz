@@ -1573,11 +1573,14 @@ function designRecord() {
 
 function reviewThumb() {
   const preview = previewCanvas(flatWrapCanvas(), 800);
-  return paintProductShot(preview, 420).toDataURL('image/jpeg', 0.72);
+  return {
+    preview: preview.toDataURL('image/jpeg', 0.62),
+    thumb: paintProductShot(preview, 420).toDataURL('image/jpeg', 0.72),
+  };
 }
 
 function review() {
-  const thumb = reviewThumb();
+  const shots = reviewThumb();
   setBag({
     v: 2,
     designId: baseDesign?.id || currentId(),
@@ -1587,7 +1590,8 @@ function review() {
     qty: 1,
     customized: isCustom(),
     design: designRecord(),
-    thumb,
+    thumb: shots.thumb,
+    preview: shots.preview,
     delivery: 'pickup',
     savedAt: Date.now(),
   });

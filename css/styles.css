@@ -696,6 +696,17 @@ input[type="color"] {
   margin: 8px auto;
 }
 .done-shot { width: min(100%, 260px); }
+.confirm-stage {
+  width: min(100%, 280px);
+  height: 340px;
+  margin: 4px auto 0;
+}
+.confirm-stage canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  touch-action: none;
+}
 .order-lines {
   text-align: left;
   display: grid;

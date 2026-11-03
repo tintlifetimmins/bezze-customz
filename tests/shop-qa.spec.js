@@ -395,6 +395,8 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
     expect(bagRaw).not.toContain('wrapPng');
     expect(bagRaw).not.toContain('data:image/png');
     expect(bagRaw).toContain('"thumb"');
+    expect(bagRaw).toContain('"preview"');
+    expect(bagRaw).toContain('data:image/jpeg');
     await press(page.locator('#qty-plus'), testInfo);
     await expect(page.locator('#qty-value')).toHaveText('2');
     await press(page.locator('#pick-ship'), testInfo);
@@ -407,8 +409,15 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
     await expect(page.locator('#download')).toHaveCount(0);
     await expect(page.locator('#proof')).toHaveCount(0);
     await expect(page.getByText('Download PNG')).toHaveCount(0);
+    const spin = page.locator('#confirm-view');
+    await expect(spin).toBeVisible();
+    await expect.poll(async () => page.evaluate(() => !!(window.__confirm && window.__confirm.ready))).toBe(true);
+    const before = await page.evaluate(() => window.__confirm.angle());
+    await page.waitForTimeout(450);
+    const after = await page.evaluate(() => window.__confirm.angle());
+    expect(after).toBeGreaterThan(before);
     const doneShot = page.locator('#done-shot');
-    await expect(doneShot).toBeVisible();
+    await expect(doneShot).toBeHidden();
     await expect.poll(async () => doneShot.evaluate((img) => img.naturalWidth || 0)).toBeGreaterThan(20);
     const confirmSize = await doneShot.evaluate((img) => {
       const sample = document.createElement('canvas');
@@ -429,6 +438,8 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
     const orderRaw = await page.evaluate(() => sessionStorage.getItem('bezze-order') || '');
     expect(orderRaw).not.toContain('wrapPng');
     expect(orderRaw).not.toContain('data:image/png');
+    expect(orderRaw).toContain('"preview"');
+    expect(orderRaw).toContain('data:image/jpeg');
     if (testInfo.project.name === 'phone' || testInfo.project.name === 'desktop') {
       mkdirSync('test-results', { recursive: true });
       const shot = await page.screenshot();

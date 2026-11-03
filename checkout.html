@@ -10,6 +10,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/styles.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
 </head>
 <body>
   <div class="sticky-top">
@@ -69,7 +77,10 @@
       <p class="kicker">Test mode</p>
       <h2 id="thanks">Order confirmed</h2>
       <p>No payment was taken. Order <strong id="order-id"></strong></p>
-      <img class="done-shot" id="done-shot" alt="Preview of your tumbler. Not a print file.">
+      <div class="confirm-stage" id="confirm-stage" data-spin="off">
+        <canvas id="confirm-view" aria-label="Watermarked tumbler preview. Not a print file."></canvas>
+      </div>
+      <img class="done-shot" id="done-shot" alt="Watermarked tumbler preview. Not a print file." hidden>
       <p class="hint">Preview only. This is not a print file.</p>
       <dl class="order-lines" id="order-lines"></dl>
       <div class="stack">
