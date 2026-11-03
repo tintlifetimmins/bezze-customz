@@ -504,6 +504,28 @@ a { color: inherit; }
 .check { display: flex; gap: 8px; align-items: flex-start; margin: 8px 0 12px; }
 .check input { margin-top: 3px; accent-color: var(--fuchsia); }
 .shapes { display: grid; grid-template-columns: repeat(3, 1fr); overflow: visible; }
+.graphics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.graphic {
+  min-height: 112px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: #141416;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 8px;
+}
+.graphic img {
+  width: 100%;
+  height: 72px;
+  object-fit: contain;
+  background: repeating-conic-gradient(#1c1c20 0% 25%, #2a2a30 0% 50%) 0 0 / 14px 14px;
+}
+.graphic b { font-size: 12px; font-weight: 600; }
+.graphic small { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .shape {
   border-radius: 16px;
   min-height: 96px;

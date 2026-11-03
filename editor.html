@@ -132,12 +132,16 @@
       </section>
       <section id="panel-clip" class="panel" data-open="false">
         <h2>Clip art <span id="clip-count"></span></h2>
-        <p class="hint">Tap a shape to add it. Tap it on the cup to recolour.</p>
+        <p class="hint">Shapes recolour. Graphics are test images.</p>
         <div class="chips" id="clip-cats" role="group" aria-label="Clip art categories"></div>
         <label class="field">Search clip art
-          <input id="shape-q" type="search" placeholder="Heart, star, leaf">
+          <input id="shape-q" type="search" placeholder="Heart, flamingo, frame">
         </label>
+        <h3 class="drop-heading">Shapes</h3>
         <div class="shapes" id="shapes"></div>
+        <h3 class="drop-heading">Graphics</h3>
+        <p class="legal-note">Test images, not for sale.</p>
+        <div class="graphics" id="graphics"></div>
       </section>
       <section id="panel-photo" class="panel" data-open="false">
         <h2>Photo</h2>
@@ -239,6 +243,13 @@
         <div class="swatches" id="clip-swatches"></div>
         <input id="clip-ink" type="color" value="#ffffff" aria-label="Shape colour">
       </div>
+    </div>
+    <div id="sheet-graphic" hidden>
+      <p class="legal-note">Test image, not for sale.</p>
+      <label class="check" id="white-toggle">
+        <input id="remove-white" type="checkbox">
+        <span>Remove white background</span>
+      </label>
     </div>
     <div class="style-row obj-actions" id="obj-actions">
       <button type="button" id="align">Centre</button>

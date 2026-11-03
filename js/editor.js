@@ -1,4 +1,5 @@
 import { CLIPS, CLIP_CATEGORIES } from './clipart.js';
+import { GRAPHICS } from './graphics.js';
 import { designReady, drawWrap, getDesign, whenDesignReady } from './designs.js';
 import { filterCatalog, loadCatalog } from './catalog.js';
 import { paintProductShot } from './thumbs.js';
@@ -255,6 +256,7 @@ function layerName(obj) {
   if (obj.data?.kind === 'monogram') return `Monogram ${obj.data.initials || ''}`.trim();
   if (isText(obj)) return obj.text || 'Name';
   if (obj.data?.kind === 'clip') return obj.data.name || 'Shape';
+  if (obj.data?.kind === 'graphic') return obj.data.name || 'Graphic';
   if (obj.data?.kind === 'photo') return 'Photo';
   return 'Layer';
 }
@@ -773,23 +775,29 @@ function showSelection(obj) {
     updateHandleBar();
     return;
   }
-  const kind = obj.data?.kind === 'monogram' ? 'monogram' : isText(obj) ? 'text' : obj.data?.kind === 'clip' ? 'clip' : obj.data?.kind === 'design' ? 'design' : 'object';
+  const kind = obj.data?.kind === 'monogram' ? 'monogram' : isText(obj) ? 'text' : obj.data?.kind === 'clip' ? 'clip' : obj.data?.kind === 'graphic' ? 'graphic' : obj.data?.kind === 'design' ? 'design' : 'object';
   sheet.dataset.open = 'true';
   sheet.dataset.kind = kind;
   document.body.classList.add('sheet-open');
   document.getElementById('sheet-text').hidden = kind !== 'text';
   document.getElementById('sheet-mono').hidden = kind !== 'monogram';
   document.getElementById('sheet-clip').hidden = kind !== 'clip';
+  document.getElementById('sheet-graphic').hidden = kind !== 'graphic';
   const dock = document.getElementById('type-dock');
   dock.hidden = kind !== 'text' && kind !== 'monogram';
   document.getElementById('edit-text').hidden = kind !== 'text';
   document.getElementById('mono-letters').hidden = kind !== 'monogram';
-  document.getElementById('sheet-title').textContent = kind === 'monogram' ? 'Edit monogram' : kind === 'text' ? 'Edit text' : kind === 'clip' ? 'Edit shape' : kind === 'design' ? 'Design layer' : 'Selected';
+  document.getElementById('sheet-title').textContent = kind === 'monogram' ? 'Edit monogram' : kind === 'text' ? 'Edit text' : kind === 'clip' ? 'Edit shape' : kind === 'graphic' ? 'Edit graphic' : kind === 'design' ? 'Design layer' : 'Selected';
   document.getElementById('obj-actions').hidden = false;
   document.getElementById('lock').textContent = obj.data?.locked ? 'Unlock' : 'Lock';
   if (kind === 'text' && document.activeElement !== document.getElementById('edit-text')) fillTextSheet(obj);
   if (kind === 'monogram' && document.activeElement !== document.getElementById('mono-letters')) fillMonoSheet(obj);
   if (kind === 'clip') document.getElementById('clip-ink').value = toHex(obj.data?.fill || '#ffffff');
+  if (kind === 'graphic') {
+    const removable = obj.data.hasAlpha === false;
+    document.getElementById('white-toggle').hidden = !removable;
+    document.getElementById('remove-white').checked = !!obj.data.removeWhite;
+  }
   refreshLayers();
   checkSafe(obj);
   updateHandleBar();
@@ -1039,6 +1047,40 @@ async function addClip(name, svg) {
   canvas.add(obj);
   canvas.setActiveObject(obj);
   commit();
+}
+
+function loadGraphic(file) {
+  return new Promise((resolve, reject) => {
+    fabric.Image.fromURL('clipart/' + file, (img) => {
+      if (!img) reject(new Error('Could not load graphic'));
+      else resolve(img);
+    }, { crossOrigin: 'anonymous' });
+  });
+}
+
+function setWhiteRemoval(obj, on) {
+  obj.filters = on ? [new fabric.Image.filters.RemoveColor({ color: '#ffffff', distance: 0.28 })] : [];
+  obj.applyFilters();
+  if (!obj.data) obj.data = {};
+  obj.data.removeWhite = on;
+  canvas.requestRenderAll();
+}
+
+async function addGraphic(item) {
+  const obj = await loadGraphic(item.file);
+  obj.set({
+    originX: 'center',
+    originY: 'center',
+    left: CW / 2,
+    top: CH / 2,
+    data: { kind: 'graphic', name: item.name, file: item.file, hasAlpha: item.hasAlpha, removeWhite: false },
+  });
+  obj.scaleToWidth(Math.min(CW * 0.42, obj.width || CW * 0.42));
+  obj.setCoords();
+  canvas.add(obj);
+  canvas.setActiveObject(obj);
+  commit();
+  showSelection(obj);
 }
 
 function loadFile(file) {
@@ -1363,9 +1405,13 @@ function bootUi() {
     }
   });
 
-  document.getElementById('clip-count').textContent = `${CLIPS.length}`;
+  document.getElementById('clip-count').textContent = `${CLIPS.length + GRAPHICS.length}`;
   const cats = document.getElementById('clip-cats');
-  CLIP_CATEGORIES.forEach((name, i) => {
+  const categories = ['All'];
+  for (const name of [...CLIP_CATEGORIES.slice(1), ...GRAPHICS.map((item) => item.category)]) {
+    if (!categories.includes(name)) categories.push(name);
+  }
+  categories.forEach((name, i) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.textContent = name;
@@ -1387,6 +1433,26 @@ function bootUi() {
     button.innerHTML = `${svg}<span>${name}</span>`;
     button.addEventListener('click', () => addClip(name, svg));
     shapes.append(button);
+  });
+  const graphics = document.getElementById('graphics');
+  GRAPHICS.forEach((item) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'graphic';
+    button.dataset.name = item.name.toLowerCase();
+    button.dataset.cat = item.category;
+    button.dataset.tags = item.tags.join(' ').toLowerCase();
+    const img = new Image();
+    img.src = 'clipart/' + item.file;
+    img.alt = '';
+    img.loading = 'lazy';
+    const title = document.createElement('b');
+    title.textContent = item.name;
+    const mark = document.createElement('small');
+    mark.textContent = 'Test';
+    button.append(img, title, mark);
+    button.addEventListener('click', () => addGraphic(item));
+    graphics.append(button);
   });
 
   const swatches = document.getElementById('swatches');
@@ -1418,10 +1484,13 @@ function bootUi() {
 function filterClips() {
   const cat = document.querySelector('#clip-cats button[aria-pressed="true"]')?.dataset.cat || 'All';
   const query = document.getElementById('shape-q').value.trim().toLowerCase();
-  document.querySelectorAll('#shapes button').forEach((button) => {
+  const match = (button) => {
     const catOk = cat === 'All' || button.dataset.cat === cat;
-    const textOk = !query || button.dataset.name.includes(query) || button.dataset.cat.toLowerCase().includes(query);
-    button.hidden = !(catOk && textOk);
+    const hay = `${button.dataset.name || ''} ${button.dataset.cat || ''} ${button.dataset.tags || ''}`.toLowerCase();
+    return catOk && (!query || hay.includes(query));
+  };
+  document.querySelectorAll('#shapes button, #graphics button').forEach((button) => {
+    button.hidden = !match(button);
   });
 }
 
@@ -1592,6 +1661,12 @@ document.getElementById('clip-ink').addEventListener('input', (event) => {
   scheduleSync();
 });
 document.getElementById('clip-ink').addEventListener('change', () => { if (active()?.data?.kind === 'clip') commit(); });
+document.getElementById('remove-white').addEventListener('change', (event) => {
+  const obj = active();
+  if (obj?.data?.kind !== 'graphic' || obj.data.hasAlpha !== false) return;
+  setWhiteRemoval(obj, event.target.checked);
+  commit();
+});
 document.getElementById('shape-q').addEventListener('input', filterClips);
 document.getElementById('rights').addEventListener('change', (event) => {
   document.getElementById('pick-photo').disabled = !event.target.checked;
