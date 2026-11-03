@@ -1296,16 +1296,15 @@ body.editor-app .btn.wide { min-height: 52px; }
     background: radial-gradient(50% 42% at 50% 42%, rgba(255, 45, 143, 0.28), #070708 72%);
   }
   body.editor-app .tabbar {
-    position: static;
-    z-index: auto;
+    position: relative;
+    z-index: 12;
     height: auto;
     display: flex;
     flex-direction: column;
     gap: 4px;
     padding: 10px;
-    background: transparent;
+    background: #0c0c0e;
     border-top: 1px solid var(--line);
-    z-index: 2;
   }
   body.editor-app .tabbar button {
     min-height: 44px;
@@ -1349,7 +1348,7 @@ body.editor-app .btn.wide { min-height: 52px; }
     left: 0;
     right: 0;
     top: 0;
-    bottom: 0;
+    bottom: var(--tool-tabs, 0px);
     width: auto;
     max-height: none;
     height: auto;

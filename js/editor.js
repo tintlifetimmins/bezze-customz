@@ -625,12 +625,48 @@ function updateHandleBar() {
   if (!bar) return;
   const obj = canvas.getActiveObject();
   const sheetOpen = document.getElementById('sheet').dataset.open === 'true';
-  bar.hidden = !obj || sheetOpen || document.body.classList.contains('typing');
+  const panelOpen = !!document.querySelector('.panel[data-open="true"]');
+  bar.hidden = !obj || sheetOpen || panelOpen || document.body.classList.contains('typing');
   const edit = document.getElementById('keep-edit');
   if (!edit) return;
   if (isText(obj)) edit.textContent = 'Edit text';
   else if (obj?.data?.kind === 'monogram') edit.textContent = 'Edit monogram';
   else edit.textContent = 'Edit';
+}
+
+function parkDock() {
+  const dock = document.getElementById('type-dock');
+  const slot = document.querySelector('#sheet .sheet-body') || document.getElementById('sheet');
+  if (!dock || !slot || dock.parentElement === slot) return;
+  const before = document.getElementById('sheet-text');
+  if (before && before.parentElement === slot) slot.insertBefore(dock, before);
+  else slot.prepend(dock);
+}
+
+function blurDock() {
+  const focused = document.activeElement;
+  if (focused && focused.closest && focused.closest('#type-dock')) focused.blur();
+}
+
+function syncFieldToObject(obj) {
+  if (!obj) return;
+  if (isText(obj)) {
+    const value = document.getElementById('edit-text').value;
+    if (obj.text !== value) {
+      obj.set('text', value);
+      obj.initDimensions();
+      touchObject(obj);
+    }
+  } else if (obj.data?.kind === 'monogram') {
+    const letters = cleanInitials(document.getElementById('mono-letters').value) || 'A';
+    if ((obj.data.initials || 'A') !== letters) updateMonogram({ initials: letters });
+  }
+}
+
+function commitTyped() {
+  const snap = takeSnap();
+  if (stack[index] === snap) return;
+  commit();
 }
 
 function closePanels() {
@@ -720,30 +756,28 @@ function beginTyping() {
   requestAnimationFrame(syncViewport);
 }
 
-function finishTyping() {
+function finishTyping(options = {}) {
+  const reopen = options.reopen !== false;
+  syncFieldToObject(canvas.getActiveObject() || retainObject);
+  const obj = canvas.getActiveObject() || retainObject;
   if (!phoneEditing()) {
-    const obj = canvas.getActiveObject() || retainObject;
     if (obj?.isEditing && obj.exitEditing) obj.exitEditing();
-    const focused = document.activeElement;
-    if (focused && focused.closest && focused.closest('#type-dock')) focused.blur();
+    blurDock();
     if (obj && canvas.getObjects().indexOf(obj) >= 0) {
       canvas.setActiveObject(obj);
       canvas.requestRenderAll();
     }
+    commitTyped();
     return;
   }
-  const dock = document.getElementById('type-dock');
-  const slot = document.getElementById('sheet');
-  if (dock && slot && dock.parentElement !== slot) slot.insertBefore(dock, document.getElementById('sheet-text'));
-  const obj = canvas.getActiveObject() || retainObject;
   typing = false;
   document.body.classList.remove('typing');
   clearDockPosition();
+  parkDock();
   retainObject = obj || null;
   retainUntil = Date.now() + 900;
-  preferHandles = !!obj;
-  const focused = document.activeElement;
-  if (focused && focused.closest && focused.closest('#type-dock')) focused.blur();
+  preferHandles = false;
+  blurDock();
   if (obj?.isEditing && obj.exitEditing) obj.exitEditing();
   if (obj && canvas.getObjects().indexOf(obj) >= 0) {
     lock = true;
@@ -752,8 +786,12 @@ function finishTyping() {
     lock = false;
     canvas.requestRenderAll();
   }
-  closeSheet();
-  closePanels();
+  commitTyped();
+  if (reopen && obj) showSelection(obj);
+  else {
+    closeSheet();
+    closePanels();
+  }
   updateHandleBar();
   scheduleSync();
 }
@@ -1544,8 +1582,21 @@ function watchTypeField(field) {
 }
 watchTypeField(document.getElementById('edit-text'));
 watchTypeField(document.getElementById('mono-letters'));
-document.getElementById('type-done').addEventListener('pointerdown', (event) => event.preventDefault());
-document.getElementById('type-done').addEventListener('click', () => finishTyping());
+const typeDone = document.getElementById('type-done');
+let typeDoneAt = 0;
+function pressDone(event) {
+  if (event) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+  const now = Date.now();
+  if (now - typeDoneAt < 400) return;
+  typeDoneAt = now;
+  setTimeout(() => finishTyping({ reopen: true }), 30);
+}
+typeDone.addEventListener('pointerdown', (event) => event.preventDefault());
+typeDone.addEventListener('pointerup', pressDone);
+typeDone.addEventListener('click', pressDone);
 document.getElementById('keep-edit').addEventListener('click', () => {
   preferHandles = false;
   const obj = active();
@@ -1696,6 +1747,7 @@ document.querySelectorAll('.tabbar button').forEach((button) => {
       button.setAttribute('aria-current', 'true');
       closeSheet();
     }
+    updateHandleBar();
   });
 });
 
@@ -1795,7 +1847,7 @@ document.getElementById('lock').addEventListener('click', () => {
   commit();
 });
 document.getElementById('sheet-close').addEventListener('click', () => {
-  if (phoneEditing()) finishTyping();
+  if (phoneEditing()) finishTyping({ reopen: false });
   else {
     const obj = active();
     if (obj?.isEditing && obj.exitEditing) obj.exitEditing();
@@ -1980,4 +2032,66 @@ if (desktopEditor()) {
 }
 window.matchMedia('(min-width: 1100px)').addEventListener('change', () => {
   showStage(desktopEditor() ? 'both' : 'flat');
+  placeToolTabs();
 });
+
+function placeToolTabs() {
+  const tabs = document.querySelector('.tabbar');
+  if (!tabs) return;
+  const height = desktopEditor() ? tabs.offsetHeight : 0;
+  document.documentElement.style.setProperty('--tool-tabs', height + 'px');
+}
+placeToolTabs();
+new ResizeObserver(placeToolTabs).observe(document.querySelector('.tabbar'));
+window.addEventListener('resize', placeToolTabs);
+
+window.__bezze = {
+  read() {
+    const obj = canvas.getActiveObject();
+    const canvasEl = canvas.upperCanvasEl;
+    const rect = canvasEl.getBoundingClientRect();
+    const scale = rect.width / canvas.getWidth();
+    let box = null;
+    if (obj) {
+      obj.setCoords();
+      const bound = obj.getBoundingRect(true, true);
+      const point = (name) => {
+        const spot = obj.oCoords && obj.oCoords[name];
+        if (!spot) return null;
+        return { x: rect.left + spot.x * scale, y: rect.top + spot.y * scale };
+      };
+      box = {
+        cx: rect.left + (bound.left + bound.width / 2) * scale,
+        cy: rect.top + (bound.top + bound.height / 2) * scale,
+        left: rect.left + bound.left * scale,
+        top: rect.top + bound.top * scale,
+        right: rect.left + (bound.left + bound.width) * scale,
+        bottom: rect.top + (bound.top + bound.height) * scale,
+        br: point('br'),
+        mtr: point('mtr'),
+      };
+    }
+    return {
+      typing: document.body.classList.contains('typing'),
+      sheetOpen: document.getElementById('sheet').dataset.open === 'true',
+      tool: document.querySelector('.panel[data-open="true"]')?.id || '',
+      text: obj?.text || '',
+      kind: obj?.data?.kind || '',
+      selected: !!obj,
+      left: obj ? obj.left : null,
+      top: obj ? obj.top : null,
+      angle: obj ? obj.angle || 0 : null,
+      scaleX: obj ? obj.scaleX || 1 : null,
+      box,
+      objects: canvas.getObjects().map((item) => ({
+        kind: item.data?.kind || '',
+        text: item.text || '',
+        left: item.left,
+        top: item.top,
+        angle: item.angle || 0,
+        scaleX: item.scaleX || 1,
+      })),
+      focused: document.activeElement ? document.activeElement.id : '',
+    };
+  },
+};

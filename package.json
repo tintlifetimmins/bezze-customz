@@ -1,0 +1,23 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "Static test site for a 20 oz custom tumbler shop. Sample artwork only. Checkout does not take payment and nothing is uploaded.",
+  "scripts": {
+    "test": "playwright test",
+    "test:live": "BASE_URL=https://tintlifetimmins.github.io/bezze-customz/ playwright test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tintlifetimmins/bezze-customz.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tintlifetimmins/bezze-customz/issues"
+  },
+  "homepage": "https://github.com/tintlifetimmins/bezze-customz#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.64.1"
+  }
+}
