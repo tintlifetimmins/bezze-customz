@@ -1,9 +1,10 @@
 import { clearBag, getBag, loadOrder, money, quote, saveOrder, setBag } from './store.js';
-import { paintProductShot } from './thumbs.js';
 import { initNav, refreshBagCount } from './nav.js';
 import { shareDesign, showCopyField, toast } from './share.js';
+import { guardSaves } from './watermark.js';
 
 initNav();
+guardSaves();
 
 const empty = document.getElementById('empty');
 const bagView = document.getElementById('bag-view');
@@ -15,24 +16,6 @@ function show(which) {
   empty.hidden = which !== 'empty';
   bagView.hidden = which !== 'bag';
   done.hidden = which !== 'done';
-}
-
-function loadImage(src) {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = reject;
-    img.src = src;
-  });
-}
-
-async function shotFromPng(src) {
-  const img = await loadImage(src);
-  const canvas = document.createElement('canvas');
-  canvas.width = img.width;
-  canvas.height = img.height;
-  canvas.getContext('2d').drawImage(img, 0, 0);
-  return paintProductShot(canvas).toDataURL('image/jpeg', 0.86);
 }
 
 function renderTotals(unit) {
@@ -73,17 +56,15 @@ function setDelivery(next) {
   }
 }
 
-async function showBag(bag) {
+function showBag(bag) {
   qty = bag.qty || 1;
   delivery = bag.delivery || 'pickup';
   document.getElementById('line-title').textContent = bag.title;
   document.getElementById('line-sub').textContent = bag.subtitle;
-  document.getElementById('line-shot').alt = bag.title + ', sample preview';
-  try {
-    document.getElementById('line-shot').src = await shotFromPng(bag.wrapPng);
-  } catch {
-    document.getElementById('line-shot').src = bag.wrapPng;
-  }
+  const shot = document.getElementById('line-shot');
+  shot.alt = bag.title + ', watermarked preview';
+  shot.draggable = false;
+  shot.src = bag.thumb;
   setDelivery(delivery);
   show('bag');
 }
@@ -94,16 +75,14 @@ function fieldError(id, message) {
   document.getElementById(id).setAttribute('aria-invalid', message ? 'true' : 'false');
 }
 
-async function showDone(order) {
+function showDone(order) {
   show('done');
   document.getElementById('thanks').textContent = 'Thanks, ' + order.customer.name.split(' ')[0] + '.';
   document.getElementById('order-id').textContent = order.id;
-  document.getElementById('proof').src = order.wrapPng;
-  document.getElementById('proof').alt = 'Print preview of your wrap';
-  const download = document.getElementById('download');
-  download.href = order.wrapPng;
-  const png = order.wrapPng.startsWith('data:image/png');
-  download.download = png ? 'bezze-design.png' : 'bezze-design.jpg';
+  const shot = document.getElementById('done-shot');
+  shot.draggable = false;
+  shot.src = order.thumb || '';
+  shot.alt = 'Watermarked tumbler preview. Not a print file.';
   const when = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'America/Toronto',
     dateStyle: 'medium',
@@ -126,12 +105,6 @@ async function showDone(order) {
     const dd = document.createElement('dd');
     dd.textContent = value;
     list.append(dt, dd);
-  }
-  try {
-    document.getElementById('done-shot').src = await shotFromPng(order.wrapPng);
-    document.getElementById('done-shot').alt = 'Tumbler preview of your design';
-  } catch {
-    document.getElementById('done-shot').hidden = true;
   }
   clearBag();
   refreshBagCount();
@@ -175,7 +148,8 @@ document.getElementById('pay').addEventListener('submit', (event) => {
     id: 'BZ-' + String(1000 + Math.floor(Math.random() * 9000)),
     title: bag.title,
     subtitle: bag.subtitle,
-    wrapPng: bag.wrapPng,
+    design: bag.design || null,
+    thumb: bag.thumb,
     delivery,
     qty,
     totals,
@@ -195,9 +169,8 @@ document.getElementById('share-order').addEventListener('click', async () => {
     title: 'Bezze Customz',
     text: `My tumbler design from Bezze Customz (test order ${order.id})`,
     url,
-    dataUrl: order.wrapPng,
   });
-  if (result === 'copied') toast('Link copied. Your picture stays on this device.');
+  if (result === 'copied') toast('Link copied. No picture is shared.');
   if (result === 'manual') showCopyField(url);
 });
 
@@ -206,6 +179,6 @@ if (confirmed) {
   showDone(confirmed);
 } else {
   const bag = getBag();
-  if (!bag || !bag.wrapPng) show('empty');
+  if (!bag || !bag.thumb) show('empty');
   else showBag(bag);
 }

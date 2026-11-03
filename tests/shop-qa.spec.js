@@ -360,6 +360,19 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
     await expect(page).toHaveURL(/checkout\.html/);
     await expect(page.locator('#bag-view')).toBeVisible();
     await expect(page.locator('#line-price')).toContainText('44.99');
+    await expect(page.locator('#download')).toHaveCount(0);
+    await expect(page.locator('#proof')).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /download/i })).toHaveCount(0);
+    const lineShot = page.locator('#line-shot');
+    await expect(lineShot).toBeVisible();
+    await expect.poll(async () => lineShot.evaluate((img) => img.naturalWidth || 0)).toBeGreaterThan(20);
+    const reviewSize = await lineShot.evaluate((img) => ({ w: img.naturalWidth, h: img.naturalHeight }));
+    expect(reviewSize.w).toBeLessThanOrEqual(800);
+    expect(reviewSize.h).toBeLessThanOrEqual(800);
+    const bagRaw = await page.evaluate(() => localStorage.getItem('bezze-bag') || sessionStorage.getItem('bezze-bag') || '');
+    expect(bagRaw).not.toContain('wrapPng');
+    expect(bagRaw).not.toContain('data:image/png');
+    expect(bagRaw).toContain('"thumb"');
     await press(page.locator('#qty-plus'), testInfo);
     await expect(page.locator('#qty-value')).toHaveText('2');
     await press(page.locator('#pick-ship'), testInfo);
@@ -369,6 +382,36 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
     await press(page.getByRole('button', { name: /Checkout/ }), testInfo);
     await expect(page.locator('#done')).toBeVisible();
     await expect(page.locator('#order-id')).not.toBeEmpty();
+    await expect(page.locator('#download')).toHaveCount(0);
+    await expect(page.locator('#proof')).toHaveCount(0);
+    await expect(page.getByText('Download PNG')).toHaveCount(0);
+    const doneShot = page.locator('#done-shot');
+    await expect(doneShot).toBeVisible();
+    await expect.poll(async () => doneShot.evaluate((img) => img.naturalWidth || 0)).toBeGreaterThan(20);
+    const confirmSize = await doneShot.evaluate((img) => {
+      const sample = document.createElement('canvas');
+      sample.width = img.naturalWidth;
+      sample.height = img.naturalHeight;
+      const ctx = sample.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, sample.width, sample.height).data;
+      let light = 0;
+      for (let i = 0; i < data.length; i += 64) {
+        if (data[i] > 235 && data[i + 1] > 235 && data[i + 2] > 235) light += 1;
+      }
+      return { w: img.naturalWidth, h: img.naturalHeight, light };
+    });
+    expect(confirmSize.w).toBeLessThanOrEqual(800);
+    expect(confirmSize.h).toBeLessThanOrEqual(800);
+    expect(confirmSize.light).toBeGreaterThan(8);
+    const orderRaw = await page.evaluate(() => sessionStorage.getItem('bezze-order') || '');
+    expect(orderRaw).not.toContain('wrapPng');
+    expect(orderRaw).not.toContain('data:image/png');
+    if (testInfo.project.name === 'phone' || testInfo.project.name === 'desktop') {
+      mkdirSync('test-results', { recursive: true });
+      const shot = await page.screenshot();
+      writeFileSync(`test-results/confirm-${testInfo.project.use.viewport.width}.png`, shot);
+    }
 
     await page.goto('editor.html?mode=custom');
     await editorReady(page);

@@ -14,18 +14,11 @@ export function toast(message) {
   }, 2600);
 }
 
-export async function shareDesign({ title, text, url, dataUrl }) {
+export async function shareDesign({ title, text, url }) {
   const shareUrl = url || location.href;
   if (navigator.share) {
-    const payload = { title, text, url: shareUrl };
     try {
-      if (dataUrl && navigator.canShare) {
-        const blob = await (await fetch(dataUrl)).blob();
-        const type = blob.type || 'image/png';
-        const file = new File([blob], type.includes('png') ? 'bezze-design.png' : 'bezze-design.jpg', { type });
-        if (navigator.canShare({ files: [file] })) payload.files = [file];
-      }
-      await navigator.share(payload);
+      await navigator.share({ title, text, url: shareUrl });
       return 'shared';
     } catch (err) {
       if (err && err.name === 'AbortError') return 'aborted';

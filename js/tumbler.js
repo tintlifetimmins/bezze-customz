@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { stampWatermark } from './watermark.js';
 
 const RT = 3.9;
 const RB = 3.7;
@@ -173,8 +174,8 @@ export class TumblerViewer {
     this.scene.environmentRotation = new THREE.Euler(0, 0.6, 0);
 
     this.buffer = document.createElement('canvas');
-    this.buffer.width = 1024;
-    this.buffer.height = 882;
+    this.buffer.width = 800;
+    this.buffer.height = Math.round(800 * 217 / 252);
     const seed = this.buffer.getContext('2d');
     seed.fillStyle = '#c2006b';
     seed.fillRect(0, 0, this.buffer.width, this.buffer.height);
@@ -298,7 +299,10 @@ export class TumblerViewer {
 
   setWrap(source, { trimmed = false } = {}) {
     if (!source || !source.width || !source.height) return;
-    this.buffer.getContext('2d').drawImage(source, 0, 0, this.buffer.width, this.buffer.height);
+    const ctx = this.buffer.getContext('2d');
+    ctx.clearRect(0, 0, this.buffer.width, this.buffer.height);
+    ctx.drawImage(source, 0, 0, this.buffer.width, this.buffer.height);
+    stampWatermark(ctx, this.buffer.width, this.buffer.height);
     this.applyCrop(trimmed);
     this.texture.needsUpdate = true;
     this.baseMat.color.copy(sampleColor(this.buffer));

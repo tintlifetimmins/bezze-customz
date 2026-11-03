@@ -6,6 +6,7 @@ import { paintProductShot } from './thumbs.js';
 import { PRICE, clearDraft, loadDraft, money, saveDraft, setBag } from './store.js';
 import { initNav } from './nav.js';
 import { shareDesign, showCopyField, toast } from './share.js';
+import { previewCanvas, stampWatermark, guardSaves } from './watermark.js';
 
 initNav();
 
@@ -239,6 +240,18 @@ canvas = new fabric.Canvas('c', {
   targetFindTolerance: 18,
   backgroundColor: '#140810',
 });
+guardSaves();
+function lockExport(el) {
+  if (!el) return;
+  el.toDataURL = () => previewCanvas(el, 800).toDataURL('image/jpeg', 0.62);
+  el.toBlob = (callback) => previewCanvas(el, 800).toBlob(callback, 'image/jpeg', 0.62);
+}
+lockExport(canvas.getElement());
+lockExport(canvas.upperCanvasEl);
+canvas.on('after:render', () => {
+  const ctx = canvas.contextContainer;
+  if (ctx) stampWatermark(ctx, canvas.getWidth(), canvas.getHeight());
+});
 
 function paintWrap(key) {
   state.wrapKey = key || null;
@@ -246,7 +259,8 @@ function paintWrap(key) {
   const paintId = gradient ? (baseDesign?.id || 'custom') : (key || baseDesign?.id || 'custom');
   const bare = paintId === 'monogram' && bareMonogram && !gradient;
   const src = drawWrap(gradient ? key : paintId, CW, CH);
-  const img = new fabric.Image(src, { originX: 'left', originY: 'top' });
+  stampWatermark(src.getContext('2d'), src.width, src.height);
+  const img = new fabric.Image(src, { originX: 'left', originY: 'top', evented: false, selectable: false });
   canvas.setBackgroundImage(img, () => {
     canvas.requestRenderAll();
     scheduleSync();
@@ -298,7 +312,7 @@ function flatWrapCanvas() {
 function scheduleSync() {
   cancelAnimationFrame(syncFrame);
   syncFrame = requestAnimationFrame(() => {
-    const source = flatWrapCanvas();
+    const source = previewCanvas(flatWrapCanvas(), 800);
     if (viewer) {
       viewer.setWrap(source, { trimmed: false });
       document.getElementById('view-stage').dataset.ready = 'true';
@@ -1547,36 +1561,35 @@ function productTitle() {
   return design ? design.name : 'Custom tumbler';
 }
 
-function exportPrintCanvas() {
-  retainObject = null;
-  retainUntil = 0;
-  const editing = canvas.getActiveObject();
-  if (editing?.exitEditing) editing.exitEditing();
-  canvas.discardActiveObject();
-  canvas.renderAll();
-  const src = canvas.getElement();
-  const bleedX = Math.round((3 / 252) * src.width);
-  const bleedY = Math.round((3 / 217) * src.height);
-  const out = document.createElement('canvas');
-  out.width = 1000;
-  out.height = Math.round(1000 * (211 / 246));
-  out.getContext('2d').drawImage(src, bleedX, bleedY, src.width - bleedX * 2, src.height - bleedY * 2, 0, 0, out.width, out.height);
-  return out;
+function designRecord() {
+  const snap = JSON.parse(takeSnap());
+  const strip = (obj) => {
+    const copy = { ...obj };
+    delete copy.src;
+    if (Array.isArray(copy.objects)) copy.objects = copy.objects.map(strip);
+    return copy;
+  };
+  snap.objects = (snap.objects || []).map(strip);
+  return snap;
+}
+
+function reviewThumb() {
+  const preview = previewCanvas(flatWrapCanvas(), 800);
+  return paintProductShot(preview, 420).toDataURL('image/jpeg', 0.72);
 }
 
 function review() {
-  const print = exportPrintCanvas();
-  let png = print.toDataURL('image/png');
-  if (png.length > 3500000) png = print.toDataURL('image/jpeg', 0.86);
+  const thumb = reviewThumb();
   setBag({
-    v: 1,
+    v: 2,
     designId: currentId(),
     title: productTitle(),
     subtitle: `20 oz · ${design?.name || 'Custom wrap'} · Full wrap`,
     unitPrice: updatePrice(),
     qty: 1,
     customized: isCustom(),
-    wrapPng: png,
+    design: designRecord(),
+    thumb,
     delivery: 'pickup',
     savedAt: Date.now(),
   });
@@ -2426,15 +2439,13 @@ document.getElementById('reset').addEventListener('click', (event) => {
   commit();
 });
 document.getElementById('share').addEventListener('click', async () => {
-  const png = exportPrintCanvas().toDataURL('image/png');
   const url = new URL(design ? `editor.html?design=${design.id}` : 'editor.html?mode=custom', location.href).href;
   const result = await shareDesign({
     title: 'Bezze Customz',
     text: 'My tumbler design from Bezze Customz (test site)',
     url,
-    dataUrl: png,
   });
-  if (result === 'copied') toast('Link copied. Edits stay on this device.');
+  if (result === 'copied') toast('Link copied. The design stays on this device.');
   if (result === 'manual') showCopyField(url);
 });
 
