@@ -40,7 +40,6 @@ function renderTotals(unit) {
   const rows = [
     ['Subtotal', money(numbers.subtotal)],
     [delivery === 'pickup' ? 'Pickup' : 'Ship', delivery === 'pickup' ? 'Free' : '$0.00'],
-    ['HST (13%)', money(numbers.hst)],
     ['Total', money(numbers.total) + ' CAD'],
   ];
   const box = document.getElementById('totals');

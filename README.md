@@ -11,7 +11,7 @@ Live site: https://tintlifetimmins.github.io/bezze-customz/
 - Editor: full wrap (246 × 211 mm plus 3 mm bleed), safe zone, text, shapes, photo, layers, undo, and a live rotatable preview
 - Bag / checkout in test mode, ending on an order confirmation with a PNG of the wrap
 
-Prices are CAD. A gallery design as-is is $39.99. Any edit, or a design started from scratch, is $44.99. Ontario HST (13%) is shown. AI styles are a stub and say “coming soon”.
+Prices are CAD, with no tax. A gallery design as-is is $39.99. Any edit, or a design started from scratch, is $44.99. AI styles are a stub and say “coming soon”.
 
 ## Run locally
 

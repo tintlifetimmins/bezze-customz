@@ -16,13 +16,8 @@ export function money(n) {
 }
 
 export function quote(unit, qty) {
-  const subtotal = Math.round(unit * 100) * qty;
-  const hst = Math.round(subtotal * 0.13);
-  return {
-    subtotal: subtotal / 100,
-    hst: hst / 100,
-    total: (subtotal + hst) / 100,
-  };
+  const subtotal = Math.round(unit * 100) * qty / 100;
+  return { subtotal, total: subtotal };
 }
 
 export function getBag() {
