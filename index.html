@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070708">
+  <title>Bezze Customz — Test</title>
+  <meta name="description" content="Test shop for Bezze Customz 20 oz custom tumblers. Sample designs only. No payment.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@600&family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Geist:wght@400;500;600;700&family=Great+Vibes&family=Instrument+Serif:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;1,400&family=Outfit:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body>
+  <div class="sticky-top">
+    <p class="test-banner">Test site · sample designs only · no payment is taken</p>
+    <div class="drop-strip">
+      <span class="left"><i class="dot" aria-hidden="true"></i> Drop 014 · Tuesday 8 PM</span>
+      <time id="count-compact" class="count-compact">--:--:--:--</time>
+    </div>
+    <header class="site-header">
+      <a class="logo" href="index.html">Bezze <em>Customz</em></a>
+      <button class="icon-btn" id="menu-btn" type="button" aria-label="Menu" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+  </div>
+  <noscript><p class="noscript">This test shop draws the tumblers in your browser and needs JavaScript.</p></noscript>
+  <section class="hero">
+    <div class="hero-copy">
+      <p class="kicker">20 oz insulated tumbler</p>
+      <h1>Made for you.<br><em>By you.</em></h1>
+    </div>
+    <div class="hero-stage" id="hero-stage" data-ready="false">
+      <p class="loading">Preparing preview…</p>
+      <canvas id="hero-view" aria-label="Spinning 3D preview of a sample 20 oz tumbler"></canvas>
+    </div>
+    <div class="hero-actions stack">
+      <a class="btn primary" href="editor.html?mode=custom">Design yours — $44.99</a>
+      <a class="btn ghost" href="gallery.html">Shop the collection · from $39.99</a>
+      <p class="fine">Free pickup in Timmins · Ships across Canada</p>
+    </div>
+  </section>
+  <section class="drop wrap">
+    <p class="kicker">This week's drop</p>
+    <h2>Drop 014</h2>
+    <p class="lede">New sample designs land every Tuesday at 8 PM, Toronto time.</p>
+    <div class="ticks" aria-label="Time until the next drop">
+      <div><strong id="cd-d">00</strong><span>days</span></div>
+      <div><strong id="cd-h">00</strong><span>hours</span></div>
+      <div><strong id="cd-m">00</strong><span>min</span></div>
+      <div><strong id="cd-s">00</strong><span>sec</span></div>
+    </div>
+    <div class="grid" id="drop-grid"></div>
+    <a class="btn ghost" href="gallery.html?cat=Drops">See the drop</a>
+  </section>
+  <footer class="site-foot">Bezze Customz · Timmins · Test site</footer>
+  <script type="module" src="js/home.js"></script>
+</body>
+</html>

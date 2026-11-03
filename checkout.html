@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070708">
+  <title>Bag · Bezze Customz</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="sticky-top">
+    <p class="test-banner">Test site · sample designs only · no payment is taken</p>
+    <header class="bag-bar">
+      <a class="icon-btn" href="gallery.html" aria-label="Back">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
+      <h1>Bag</h1>
+      <span></span>
+    </header>
+  </div>
+  <main class="sheet">
+    <section id="empty">
+      <h2 class="section-title">Your bag is empty</h2>
+      <p class="lede">Pick a sample design, add a name, then come back here.</p>
+      <a class="btn primary" href="gallery.html">Shop the collection</a>
+    </section>
+    <section id="bag-view" hidden>
+      <article class="line">
+        <img id="line-shot" alt="">
+        <div>
+          <h2 id="line-title">Custom tumbler</h2>
+          <p id="line-sub">20 oz · Full wrap</p>
+          <div class="qty">
+            <button type="button" id="qty-minus" aria-label="Fewer">−</button>
+            <span id="qty-value">1</span>
+            <button type="button" id="qty-plus" aria-label="More">+</button>
+          </div>
+        </div>
+        <b id="line-price">$44.99</b>
+      </article>
+      <h2>Delivery</h2>
+      <div class="ship-grid">
+        <button type="button" class="ship" id="pick-pickup" aria-pressed="true">Pickup <small>Timmins · Free</small></button>
+        <button type="button" class="ship" id="pick-ship" aria-pressed="false">Ship <small>Canada Post · $0 in this test</small></button>
+      </div>
+      <div class="totals" id="totals"></div>
+      <form id="pay" novalidate>
+        <label class="field">Name
+          <input id="name" name="name" autocomplete="name" required>
+          <p class="err" id="name-error"></p>
+        </label>
+        <label class="field">Email
+          <input id="email" name="email" type="email" autocomplete="email" required>
+          <p class="err" id="email-error"></p>
+        </label>
+        <label class="field">Phone
+          <input id="phone" name="tel" type="tel" autocomplete="tel" placeholder="705-555-0100" required>
+          <p class="err" id="phone-error"></p>
+        </label>
+        <button class="btn primary wide" type="submit">Checkout (test mode — no payment)</button>
+        <p class="secure">Test mode · Square is not connected · No payment will be taken</p>
+      </form>
+    </section>
+    <section id="done" class="confirm" hidden>
+      <p class="kicker">Test mode</p>
+      <h2 id="thanks">Order confirmed</h2>
+      <p>No payment was taken. Order <strong id="order-id"></strong></p>
+      <img class="done-shot" id="done-shot" alt="">
+      <img class="proof" id="proof" alt="">
+      <p class="hint">Your wrap, print area 246 × 211 mm</p>
+      <dl class="order-lines" id="order-lines"></dl>
+      <div class="stack">
+        <button class="btn primary" type="button" id="share-order">Share</button>
+        <a class="btn ghost" id="download" href="#">Download PNG</a>
+        <a class="btn ghost" href="gallery.html">Design another</a>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="js/checkout.js"></script>
+</body>
+</html>
