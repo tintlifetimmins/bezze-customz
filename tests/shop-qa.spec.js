@@ -284,7 +284,7 @@ test('shop controls a customer actually uses', async ({ page }, testInfo) => {
   await test.step('clip art', async () => {
     await press(page.locator('[data-panel="clip"]'), testInfo);
     await expect(page.locator('#shapes button')).toHaveCount(42);
-    await expect(page.locator('#graphics button')).toHaveCount(30);
+    await expect.poll(async () => page.locator('#graphics button').count()).toBeGreaterThanOrEqual(30);
     await press(page.locator('#shapes button').first(), testInfo);
     await expect.poll(async () => (await read(page)).kind).toBe('clip');
     await press(page.locator('#sheet-close'), testInfo);

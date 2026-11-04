@@ -131,11 +131,11 @@
         <button class="btn primary wide" id="add-mono" type="button">Add monogram</button>
       </section>
       <section id="panel-clip" class="panel" data-open="false">
-        <h2>Clip art <span id="clip-count"></span></h2>
+        <h2>Clip art</h2>
         <p class="hint">Shapes recolour. Graphics keep their own colours.</p>
-        <div class="chips" id="clip-cats" role="group" aria-label="Clip art categories"></div>
+        <div class="chips" id="clip-cats" role="group" aria-label="Clip art tags"></div>
         <label class="field">Search clip art
-          <input id="shape-q" type="search" placeholder="Heart, flamingo, frame">
+          <input id="shape-q" type="search" placeholder="Search title or tag" autocomplete="off">
         </label>
         <h3 class="drop-heading">Shapes</h3>
         <div class="shapes" id="shapes"></div>
@@ -157,6 +157,7 @@
   <aside id="sheet" class="edit-sheet" data-open="false" data-kind="" aria-label="Edit selection">
     <div class="sheet-head">
       <h2 id="sheet-title">Edit text</h2>
+      <button type="button" id="clip-done" hidden>Done</button>
       <button type="button" id="sheet-close" aria-label="Close editor">Close</button>
     </div>
     <div class="sheet-body">

@@ -521,6 +521,7 @@ a { color: inherit; }
 .check input { margin-top: 3px; accent-color: var(--fuchsia); }
 .shapes { display: grid; grid-template-columns: repeat(3, 1fr); overflow: visible; }
 .graphics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.clip-sentinel { height: 8px; grid-column: 1 / -1; }
 .graphic {
   min-height: 112px;
   border-radius: 16px;

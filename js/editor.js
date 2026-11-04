@@ -1,5 +1,6 @@
-import { CLIPS, CLIP_CATEGORIES } from './clipart.js';
+import { CLIPS } from './clipart.js';
 import { GRAPHICS } from './graphics.js';
+import { commonTags, loadClipLibrary } from './clipart-feed.js';
 import { designReady, drawWrap, getDesign, whenDesignReady } from './designs.js';
 import { filterCatalog, loadCatalog } from './catalog.js';
 import { installDropDesigns } from './designs.js';
@@ -1022,6 +1023,8 @@ function showSelection(obj) {
   document.getElementById('lock').textContent = obj.data?.locked ? 'Unlock' : 'Lock';
   if (kind === 'text' && document.activeElement !== document.getElementById('edit-text')) fillTextSheet(obj);
   if (kind === 'monogram' && document.activeElement !== document.getElementById('mono-letters')) fillMonoSheet(obj);
+  const clipDone = document.getElementById('clip-done');
+  if (clipDone) clipDone.hidden = kind !== 'graphic' && kind !== 'clip';
   if (kind === 'clip' || kind === 'graphic') setPicker(toHex(obj.data?.fill || obj.data?.tint || '#ffffff'), false);
   if (kind === 'graphic') {
     const removable = obj.data.hasAlpha === false;
@@ -1399,8 +1402,9 @@ async function addClip(name, svg) {
 }
 
 function loadGraphic(file) {
+  const src = String(file).startsWith('clipart/') ? file : `clipart/${file}`;
   return new Promise((resolve, reject) => {
-    fabric.Image.fromURL('clipart/' + file, (img) => {
+    fabric.Image.fromURL(src, (img) => {
       if (!img) reject(new Error('Could not load graphic'));
       else resolve(img);
     }, { crossOrigin: 'anonymous' });
@@ -1424,7 +1428,11 @@ async function addGraphic(item) {
     top: CH / 2,
     data: { kind: 'graphic', name: item.name, file: item.file, hasAlpha: item.hasAlpha, removeWhite: false },
   });
-  obj.scaleToWidth(Math.min(CW * 0.42, obj.width || CW * 0.42));
+  const maxW = CW * 0.42;
+  const maxH = CH * 0.55;
+  obj.scaleToWidth(maxW);
+  if (obj.getScaledHeight() > maxH) obj.scaleToHeight(maxH);
+  obj.set({ left: CW / 2, top: CH / 2 });
   obj.setCoords();
   canvas.add(obj);
   canvas.setActiveObject(obj);
@@ -1930,24 +1938,6 @@ function bootUi() {
     updateMonogram({ fill: color }, true);
   });
 
-  document.getElementById('clip-count').textContent = `${CLIPS.length + GRAPHICS.length}`;
-  const cats = document.getElementById('clip-cats');
-  const categories = ['All'];
-  for (const name of [...CLIP_CATEGORIES.slice(1), ...GRAPHICS.map((item) => item.category)]) {
-    if (!categories.includes(name)) categories.push(name);
-  }
-  categories.forEach((name, i) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.textContent = name;
-    button.dataset.cat = name;
-    button.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
-    button.addEventListener('click', () => {
-      cats.querySelectorAll('button').forEach((item) => item.setAttribute('aria-pressed', item === button ? 'true' : 'false'));
-      filterClips();
-    });
-    cats.append(button);
-  });
   const shapes = document.getElementById('shapes');
   CLIPS.forEach(([name, category, svg]) => {
     const button = document.createElement('button');
@@ -1959,25 +1949,12 @@ function bootUi() {
     button.addEventListener('click', () => addClip(name, svg));
     shapes.append(button);
   });
-  const graphics = document.getElementById('graphics');
-  GRAPHICS.forEach((item) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'graphic';
-    button.dataset.name = item.name.toLowerCase();
-    button.dataset.cat = item.category;
-    button.dataset.tags = item.tags.join(' ').toLowerCase();
-    const img = new Image();
-    img.src = 'clipart/' + item.file;
-    img.alt = '';
-    img.loading = 'lazy';
-    const title = document.createElement('b');
-    title.textContent = item.name;
-    const mark = document.createElement('small');
-    mark.textContent = 'Test';
-    button.append(img, title, mark);
-    button.addEventListener('click', () => addGraphic(item));
-    graphics.append(button);
+  paintClipTags(['All']);
+  filterClips();
+  loadClipLibrary().then((items) => {
+    clipLibrary = items;
+    paintClipTags(['All', ...commonTags(items)]);
+    filterClips();
   });
 
   const swatches = document.getElementById('swatches');
@@ -2006,17 +1983,139 @@ function bootUi() {
   });
 }
 
-function filterClips() {
-  const cat = document.querySelector('#clip-cats button[aria-pressed="true"]')?.dataset.cat || 'All';
-  const query = document.getElementById('shape-q').value.trim().toLowerCase();
-  const match = (button) => {
-    const catOk = cat === 'All' || button.dataset.cat === cat;
-    const hay = `${button.dataset.name || ''} ${button.dataset.cat || ''} ${button.dataset.tags || ''}`.toLowerCase();
-    return catOk && (!query || hay.includes(query));
-  };
-  document.querySelectorAll('#shapes button, #graphics button').forEach((button) => {
-    button.hidden = !match(button);
+let clipLibrary = [];
+let clipTag = 'All';
+let clipList = [];
+let clipShown = 0;
+let clipObserver = null;
+const CLIP_PAGE = 60;
+
+function clipQuery() {
+  return document.getElementById('shape-q').value.trim().toLowerCase();
+}
+
+function scrollClipTop() {
+  const panel = document.getElementById('panel-clip');
+  if (panel) panel.scrollTop = 0;
+}
+
+function paintClipTags(tags) {
+  const cats = document.getElementById('clip-cats');
+  cats.replaceChildren();
+  tags.forEach((name) => {
+    const value = name === 'All' ? 'All' : name.toLowerCase();
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = name === 'All' ? 'All' : name;
+    button.dataset.tag = value;
+    button.setAttribute('aria-pressed', clipTag === value ? 'true' : 'false');
+    button.addEventListener('click', () => {
+      clipTag = value;
+      cats.querySelectorAll('button').forEach((item) => {
+        item.setAttribute('aria-pressed', item === button ? 'true' : 'false');
+      });
+      filterClips();
+    });
+    cats.append(button);
   });
+}
+
+function graphicMatches(item) {
+  const query = clipQuery();
+  const name = (item.name || '').toLowerCase();
+  const category = (item.category || '').toLowerCase();
+  const tags = (item.tags || []).map((tag) => String(tag).toLowerCase());
+  const tagOk = clipTag === 'All' || tags.includes(clipTag) || category === clipTag;
+  const queryOk = !query || name.includes(query) || category.includes(query) || tags.some((tag) => tag.includes(query));
+  return tagOk && queryOk;
+}
+
+function shapeMatches(button) {
+  const query = clipQuery();
+  const name = button.dataset.name || '';
+  const category = (button.dataset.cat || '').toLowerCase();
+  const tagOk = clipTag === 'All' || category === clipTag || name.includes(clipTag);
+  const queryOk = !query || name.includes(query) || category.includes(query);
+  return tagOk && queryOk;
+}
+
+function graphicButton(item) {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'graphic';
+  button.dataset.name = (item.name || '').toLowerCase();
+  button.dataset.cat = item.category || '';
+  button.dataset.tags = (item.tags || []).join(' ').toLowerCase();
+  if (item.library) button.dataset.library = 'true';
+  const img = new Image();
+  img.alt = item.name || '';
+  img.decoding = 'async';
+  img.loading = 'lazy';
+  img.src = item.src || `clipart/${item.file}`;
+  const title = document.createElement('b');
+  title.textContent = item.name;
+  button.append(img, title);
+  button.addEventListener('click', () => addGraphic(item));
+  return button;
+}
+
+function showMoreClips() {
+  const box = document.getElementById('graphics');
+  const sentinel = box.querySelector('.clip-sentinel');
+  const slice = clipList.slice(clipShown, clipShown + CLIP_PAGE);
+  if (!slice.length) {
+    if (sentinel) sentinel.hidden = true;
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  slice.forEach((item) => frag.append(graphicButton(item)));
+  clipShown += slice.length;
+  if (sentinel) box.insertBefore(frag, sentinel);
+  else box.append(frag);
+  if (sentinel) sentinel.hidden = clipShown >= clipList.length;
+}
+
+function renderClipGrid() {
+  const box = document.getElementById('graphics');
+  clipList = GRAPHICS.filter(graphicMatches).concat(clipLibrary.filter(graphicMatches));
+  clipShown = 0;
+  box.replaceChildren();
+  const sentinel = document.createElement('div');
+  sentinel.className = 'clip-sentinel';
+  sentinel.setAttribute('aria-hidden', 'true');
+  box.append(sentinel);
+  const panel = document.getElementById('panel-clip');
+  if (!clipObserver) {
+    clipObserver = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) showMoreClips();
+    }, { root: panel, rootMargin: '280px' });
+  }
+  clipObserver.disconnect();
+  clipObserver.observe(sentinel);
+  showMoreClips();
+}
+
+function filterClips() {
+  document.querySelectorAll('#shapes button').forEach((button) => {
+    button.hidden = !shapeMatches(button);
+  });
+  renderClipGrid();
+  scrollClipTop();
+}
+
+function closeClipPanel() {
+  const panel = document.getElementById('panel-clip');
+  if (panel) {
+    panel.scrollTop = 0;
+    panel.dataset.open = 'false';
+  }
+  const tab = document.querySelector('[data-panel="clip"]');
+  if (tab) tab.setAttribute('aria-current', 'false');
+  preferHandles = true;
+  const obj = active();
+  if (obj) obj.set({ hasControls: !obj.data?.locked, hasBorders: true });
+  closeSheet();
+  canvas.requestRenderAll();
 }
 
 bootUi();
@@ -2435,6 +2534,7 @@ document.getElementById('lock').addEventListener('click', () => {
   setLocked(obj, !obj.data?.locked);
   commit();
 });
+document.getElementById('clip-done').addEventListener('click', () => closeClipPanel());
 document.getElementById('sheet-close').addEventListener('click', () => {
   if (phoneEditing()) finishTyping({ reopen: false });
   else {
