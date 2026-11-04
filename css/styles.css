@@ -339,6 +339,16 @@ a { color: inherit; }
   white-space: nowrap;
 }
 .chips button[aria-pressed="true"] { background: white; color: #111; border-color: white; }
+#panel-clip #clip-cats {
+  flex-wrap: nowrap;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 32px), transparent);
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 32px), transparent);
+}
 .sort select {
   background: transparent;
   border: 0;
@@ -541,7 +551,14 @@ a { color: inherit; }
   object-fit: contain;
   background: repeating-conic-gradient(#1c1c20 0% 25%, #2a2a30 0% 50%) 0 0 / 14px 14px;
 }
-.graphic b { font-size: 12px; font-weight: 600; }
+.graphic b {
+  font-size: 12px;
+  font-weight: 600;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
 .graphic small { font-size: 10px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
 .shape {
   border-radius: 16px;
@@ -1346,6 +1363,14 @@ body.editor-app .btn.wide { min-height: 52px; }
   body.editor-app .tabbar button[aria-current="true"] { background: #1c1c22; color: white; }
   body.editor-app .tabbar svg { width: 20px; height: 20px; }
   body.editor-app .panel .chips { flex-wrap: wrap; overflow: visible; }
+body.editor-app #panel-clip #clip-cats {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 32px), transparent);
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 32px), transparent);
+}
   body.editor-app .panel {
     position: static;
     z-index: auto;

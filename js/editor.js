@@ -1,6 +1,6 @@
 import { CLIPS } from './clipart.js';
 import { GRAPHICS } from './graphics.js';
-import { commonTags, loadClipLibrary } from './clipart-feed.js';
+import { clipLabel, commonTags, libraryCutout, libraryThumb, loadClipLibrary } from './clipart-feed.js';
 import { designReady, drawWrap, getDesign, whenDesignReady } from './designs.js';
 import { filterCatalog, loadCatalog } from './catalog.js';
 import { installDropDesigns } from './designs.js';
@@ -1420,13 +1420,21 @@ function setWhiteRemoval(obj, on) {
 }
 
 async function addGraphic(item) {
-  const obj = await loadGraphic(item.file);
+  const obj = item.library
+    ? new fabric.Image(await libraryCutout(item))
+    : await loadGraphic(item.file);
   obj.set({
     originX: 'center',
     originY: 'center',
     left: CW / 2,
     top: CH / 2,
-    data: { kind: 'graphic', name: item.name, file: item.file, hasAlpha: item.hasAlpha, removeWhite: false },
+    data: {
+      kind: 'graphic',
+      name: item.name,
+      file: item.file,
+      hasAlpha: item.library ? true : item.hasAlpha,
+      removeWhite: false,
+    },
   });
   const maxW = CW * 0.42;
   const maxH = CH * 0.55;
@@ -2048,13 +2056,17 @@ function graphicButton(item) {
   button.dataset.tags = (item.tags || []).join(' ').toLowerCase();
   if (item.library) button.dataset.library = 'true';
   const img = new Image();
-  img.alt = item.name || '';
+  const label = clipLabel(item.name);
+  img.alt = label;
   img.decoding = 'async';
-  img.loading = 'lazy';
-  img.src = item.src || `clipart/${item.file}`;
-  const title = document.createElement('b');
-  title.textContent = item.name;
-  button.append(img, title);
+  if (item.library) libraryThumb(item).then((url) => { img.src = url; }).catch(() => {});
+  else img.src = item.src || `clipart/${item.file}`;
+  button.append(img);
+  if (label) {
+    const title = document.createElement('b');
+    title.textContent = label;
+    button.append(title);
+  }
   button.addEventListener('click', () => addGraphic(item));
   return button;
 }
@@ -2811,5 +2823,17 @@ window.__bezze = {
       })),
       focused: document.activeElement ? document.activeElement.id : '',
     };
+  },
+  cutoutCorners() {
+    const obj = canvas.getActiveObject();
+    const el = obj && obj.getElement && obj.getElement();
+    if (!el || !el.width || !el.height) return null;
+    const sample = document.createElement('canvas');
+    sample.width = el.width;
+    sample.height = el.height;
+    const ctx = sample.getContext('2d');
+    ctx.drawImage(el, 0, 0);
+    return [[0, 0], [el.width - 1, 0], [0, el.height - 1], [el.width - 1, el.height - 1]]
+      .map(([x, y]) => ctx.getImageData(x, y, 1, 1).data[3]);
   },
 };
